@@ -1,0 +1,25 @@
+{
+    "server": {
+        "url": "localhost:8080",
+        "port": "8080",
+        "appKey": "sdfwersssjpti3jjkdjf0kkdj34dgow83lw7jkop245fgy89fh"
+    },
+    "client": {
+        "url": "localhost:3000"
+    },
+    "auth": {
+        "customerTokenSecret": "ddfae34w55-ou5jr-rmdfdddfid-ajgeewii-kk453sje",
+        "adminTokenSecret": "3fesour-dfs3wee-ssdaw34re-era23bjgtos-jk56fhyuur"
+    },
+    "database": {
+        "host": "localhost",
+        "port": "3306",
+        "name": "payrollDB2020",
+        "user": "root",
+        "pass": "",
+        "charset": "utf8mb4_unicode_ci"
+    },
+    "sendGrid": {
+        "apiKey": "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"
+    }
+}

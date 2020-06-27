@@ -1,0 +1,11 @@
+{
+    "notification": {
+        "competition_started": "Competition has started. Wishing you all the best Scholar!",
+        "new_payment": "Congrats Scholar, new payment of {{.Amount}} has been received in your account from Competition ID - {{.CompetitionID}}",
+        "new_scores_update": "{{.TeamOne}} is leading {{.TeamTwo}} by {{.TeamOneScores}} to {{.TeamTwoScores}}",
+        "equalize_scores_update": "{{.TeamOne}} has equalize {{.TeamTwo}}. It's now {{.TeamOneScores}} - {{.TeamTwoScores}}",
+        "competition_completed_losser_message": "Hello Scholar, this Competition has been completed. {{.Winner}} is the winner.",
+        "competition_completed_winner_message": "Congrats Scholar, this competition has been completed. You are the winner",
+        "competition_completed_draw_message": "This competition has been completed. It was a tie"
+    }
+}
