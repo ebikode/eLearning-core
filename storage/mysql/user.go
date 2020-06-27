@@ -22,51 +22,67 @@ func NewDBUserStorage(db *MDatabase) *DBUserStorage {
 func (edb *DBUserStorage) GetDashbordData(userID string) *md.UserDashbordData {
 	data := md.UserDashbordData{}
 
-	// Sum GrossSalaryPaid
-	err := edb.db.Table("payrolls").
-		Select("sum(gross_salary) as gross_salary_earned").
-		Where("payment_status=? AND user_id=?", ut.Success, userID).
+	// Certificates
+	err := edb.db.Table("applications").
+		Select("count(distinct(id)) as certificates").
+		Where("is_certificate_issued=? AND user_id=?", true, userID).
 		Scan(&data).Error
 
-	// Sum NetSalaryPaid
-	err = edb.db.Table("payrolls").
-		Select("sum(net_salary) as net_salary_earned").
-		Where("payment_status=? AND user_id=?", ut.Success, userID).
+	// Applications
+	err = edb.db.Table("applications").
+		Select("count(distinct(id)) as applications").
+		Where("user_id=?", userID).
 		Scan(&data).Error
 
-	// Sum PensionPaid
-	err = edb.db.Table("payrolls").
-		Select("sum(pension) as pension_paid").
-		Joins("JOIN taxes as tax ON tax.payroll_id = payrolls.id").
-		Where("payment_status=? AND user_id=?", ut.Success, userID).
+	// Completed Assessments
+	err = edb.db.Table("applications").
+		Select("count(distinct(id)) as completed_assessments").
+		Where("is_assessment_completed=? AND user_id=?", true, userID).
 		Scan(&data).Error
 
-	// Sum PayePaid
-	err = edb.db.Table("payrolls").
-		Select("sum(paye) as paye_paid").
-		Joins("JOIN taxes as tax ON tax.payroll_id = payrolls.id").
-		Where("payment_status=? AND user_id=?", ut.Success, userID).
+	// Number Courses Applied For
+	err = edb.db.Table("applications").
+		Select("count(distinct(co.id)) as courses").
+		Joins("JOIN courses as co ON co.id = applications.course_id").
+		Where("applications.user_id=?", userID).
 		Scan(&data).Error
 
-	// Sum NsitfPaid
-	err = edb.db.Table("payrolls").
-		Select("sum(nsitf) as nsitf_paid").
-		Joins("JOIN taxes as tax ON tax.payroll_id = payrolls.id").
-		Where("payment_status=? AND user_id=?", ut.Success, userID).
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return &data
+}
+
+// GetTutorDashbordData ...
+func (edb *DBUserStorage) GetTutorDashbordData(userID string) *md.TutorDashbordData {
+	data := md.TutorDashbordData{}
+
+	// Certificates
+	err := edb.db.Table("applications").
+		Select("count(distinct(applications.id)) as certificates").
+		Joins("JOIN courses as co ON co.id = applications.course_id").
+		Where("applications.is_certificate_issued=? AND co.user_id=?", true, userID).
 		Scan(&data).Error
 
-	// Sum NhfPaid
-	err = edb.db.Table("payrolls").
-		Select("sum(nhf) as nhf_paid").
-		Joins("JOIN taxes as tax ON tax.payroll_id = payrolls.id").
-		Where("payment_status=? AND user_id=?", ut.Success, userID).
+	// Applications
+	err = edb.db.Table("applications").
+		Select("count(distinct(applications.id)) as applications").
+		Joins("JOIN courses as co ON co.id = applications.course_id").
+		Where("co.user_id=?", true, userID).
 		Scan(&data).Error
 
-	// Sum ItfPaid
-	err = edb.db.Table("payrolls").
-		Select("sum(itf) as itf_paid").
-		Joins("JOIN taxes as tax ON tax.payroll_id = payrolls.id").
-		Where("payment_status=? AND user_id=?", ut.Success, userID).
+	// Completed Assessments
+	err = edb.db.Table("applications").
+		Select("count(distinct(applications.id)) as completed_assessments").
+		Joins("JOIN courses as co ON co.id = applications.course_id").
+		Where("applications.is_assessment_completed=? AND co.user_id=?", true, userID).
+		Scan(&data).Error
+
+	// Number Courses Applied For
+	err = edb.db.Table("courses").
+		Select("count(distinct(id)) as courses").
+		Where("user_id=?", userID).
 		Scan(&data).Error
 
 	if err != nil {

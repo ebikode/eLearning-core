@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	que "github.com/ebikode/eLearning-core/domain/question"
 	usr "github.com/ebikode/eLearning-core/domain/user"
@@ -51,6 +52,21 @@ func GetAdminQuestionsEndpoint(qs que.QuestionService) http.HandlerFunc {
 		resp["current_page"] = page
 		resp["next_page"] = nextPage
 		resp["limit"] = limit
+		resp["questions"] = questions
+		ut.Respond(w, r, resp)
+	}
+
+}
+
+// GetCourseQuestionsEndpoint all questions of a tutor user
+func GetCourseQuestionsEndpoint(qus que.QuestionService) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		courseID, _ := strconv.ParseUint(chi.URLParam(r, "courseID"), 10, 64)
+
+		questions := qus.GetQuestionsByCourse(uint(courseID))
+
+		resp := ut.Message(true, "")
 		resp["questions"] = questions
 		ut.Respond(w, r, resp)
 	}

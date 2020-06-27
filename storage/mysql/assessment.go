@@ -72,8 +72,8 @@ func (pdb *DBAssessmentStorage) GetAll(page, limit int) []*md.Assessment {
 	return assessments
 }
 
-// GetByUser Get all assessments of a application  form DB
-func (pdb *DBAssessmentStorage) GetByUser(applicationID string, page, limit int) []*md.Assessment {
+// GetByApplication Get all assessments of a application  form DB
+func (pdb *DBAssessmentStorage) GetByApplication(userID, applicationID string, page, limit int) []*md.Assessment {
 	var assessments []*md.Assessment
 	// Select resource from database
 	q := pdb.db.
@@ -83,7 +83,11 @@ func (pdb *DBAssessmentStorage) GetByUser(applicationID string, page, limit int)
 		Preload("Question")
 
 	pagination.Paging(&pagination.Param{
-		DB:      q.Where("application_id=?", applicationID).Order("created_at desc").Find(&assessments),
+		DB: q.
+			Joins("JOIN applications as app ON app.id = assessments.application_id").
+			Where("app.user_id=? AND assessments.application_id=?", userID, applicationID).
+			Order("created_at desc").
+			Find(&assessments),
 		Page:    page,
 		Limit:   limit,
 		OrderBy: []string{"created_at desc"},

@@ -1,5 +1,14 @@
 package utils
 
+// AdminRole is an enum constant for database role
+const AdminRole = "admin"
+
+// UserRole is an enum constant for database role
+const UserRole = "user"
+
+// TutorRole is an enum constant for database role
+const TutorRole = "tutor"
+
 // Success is an enum constant for database status
 const Success = "success"
 

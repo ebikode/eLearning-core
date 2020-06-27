@@ -28,9 +28,10 @@ type ValidationFields struct {
 type CourseRepository interface {
 	// Get returns the course with given ID.
 	Get(uint) *md.Course
-	GetByUser(string) *md.Course
+	GetSingleByUser(string, uint) *md.Course
+	GetByUser(string, int, int) []*md.Course
 	// Get returns all salaries.
-	GetAll(int, int) []*md.Course
+	GetAll(int, int, string) []*md.Course
 	// Store a given course to the repository.
 	Store(md.Course) (*md.Course, error)
 	// Update a given course in the repository.

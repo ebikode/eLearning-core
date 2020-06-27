@@ -79,6 +79,7 @@ func AuthenticateUserEndpoint(appSecret string, us usr.UserService, aps app.Appl
 			UserID:   user.ID,
 			DeviceID: audd.ID,
 			Username: user.Username,
+			Role:     user.Role,
 			ExpireOn: time.Now().Add(time.Duration(31536000)).UTC(),
 		}
 

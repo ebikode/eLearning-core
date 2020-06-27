@@ -43,62 +43,49 @@ func (adb *DBAdminStorage) GetDashbordData() *md.DashbordData {
 	result = 0
 
 	// count All Active Users
-	adb.db.Model(&user).Where("status=?", "active").Count(&result)
+	adb.db.Model(&user).Where("status=? AND role=?", ut.Active, ut.UserRole).Count(&result)
 
 	data.ActiveUsersCount = result
 	result = 0
 
 	// count All Pending Users
-	adb.db.Model(&user).Where("status=?", "pending").Count(&result)
+	adb.db.Model(&user).Where("status=? AND role=?", ut.Pending, ut.UserRole).Count(&result)
 
 	data.PendingUsersCount = result
 	result = 0
 
-	// Sum GrossSalaryPaid
-	err := adb.db.Table("payrolls").
-		Select("sum(gross_salary) as gross_salary_paid").
-		Where("payment_status=?", ut.Success).
+	// count All Active Tutors
+	adb.db.Model(&user).Where("status=? AND role=?", ut.Active, ut.TutorRole).Count(&result)
+
+	data.ActiveTutorsCount = result
+	result = 0
+
+	// count All Pending Tutors
+	adb.db.Model(&user).Where("status=? AND role=?", ut.Pending, ut.TutorRole).Count(&result)
+
+	data.PendingTutorsCount = result
+	result = 0
+
+	// Certificates
+	err := adb.db.Table("applications").
+		Select("count(distinct(id)) as certificates").
+		Where("is_certificate_issued=?", true).
 		Scan(&data).Error
 
-	// Sum NetSalaryPaid
-	err = adb.db.Table("payrolls").
-		Select("sum(net_salary) as net_salary_paid").
-		Where("payment_status=?", ut.Success).
+	// Applications
+	err = adb.db.Table("applications").
+		Select("count(distinct(id)) as applications").
 		Scan(&data).Error
 
-	// Sum PensionPaid
-	err = adb.db.Table("payrolls").
-		Select("sum(pension) as pension_paid").
-		Joins("JOIN taxes as tax ON tax.payroll_id = payrolls.id").
-		Where("payrolls.payment_status=?", ut.Success).
+	// Completed Assessments
+	err = adb.db.Table("applications").
+		Select("count(distinct(id)) as completed_assessments").
+		Where("is_assessment_completed=?", true).
 		Scan(&data).Error
 
-	// Sum PayePaid
-	err = adb.db.Table("payrolls").
-		Select("sum(paye) as paye_paid").
-		Joins("JOIN taxes as tax ON tax.payroll_id = payrolls.id").
-		Where("payrolls.payment_status=?", ut.Success).
-		Scan(&data).Error
-
-	// Sum NsitfPaid
-	err = adb.db.Table("payrolls").
-		Select("sum(nsitf) as nsitf_paid").
-		Joins("JOIN taxes as tax ON tax.payroll_id = payrolls.id").
-		Where("payrolls.payment_status=?", ut.Success).
-		Scan(&data).Error
-
-	// Sum NhfPaid
-	err = adb.db.Table("payrolls").
-		Select("sum(nhf) as nhf_paid").
-		Joins("JOIN taxes as tax ON tax.payroll_id = payrolls.id").
-		Where("payrolls.payment_status=?", ut.Success).
-		Scan(&data).Error
-
-	// Sum ItfPaid
-	err = adb.db.Table("payrolls").
-		Select("sum(itf) as itf_paid").
-		Joins("JOIN taxes as tax ON tax.payroll_id = payrolls.id").
-		Where("payrolls.payment_status=?", ut.Success).
+	// Number Courses Applied For
+	err = adb.db.Table("courses").
+		Select("count(distinct(id)) as courses").
 		Scan(&data).Error
 
 	if err != nil {

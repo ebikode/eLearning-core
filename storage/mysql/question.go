@@ -30,8 +30,8 @@ func (adb *DBQuestionStorage) Get(id string) *md.Question {
 	return &question
 }
 
-// GetByUserID Fetch Single Question fron DB
-func (adb *DBQuestionStorage) GetByUserID(id string) *md.Question {
+// GetSingleByUserID Fetch Single Question fron DB
+func (adb *DBQuestionStorage) GetSingleByUserID(id string) *md.Question {
 	question := md.Question{}
 	// Select resource from database
 	err := adb.db.
@@ -64,7 +64,7 @@ func (adb *DBQuestionStorage) GetAll(page, limit int) []*md.Question {
 }
 
 // GetByCourse Fetch all course' questions from DB
-func (adb *DBQuestionStorage) GetByCourse(courseID string) []*md.PubQuestion {
+func (adb *DBQuestionStorage) GetByCourse(courseID uint) []*md.PubQuestion {
 	var questions []*md.PubQuestion
 
 	adb.db.

@@ -24,7 +24,8 @@ type ValidationFields struct {
 type ArticleRepository interface {
 	// Get returns the article with given ID.
 	Get(uint) *md.Article
-	GetByCourse(int) *md.Article
+	GetByCourse(int) []*md.Article
+	GetByUser(string, int, int) []*md.Article
 	// Get returns all articles.
 	GetAll(int, int) []*md.Article
 	// Store a given article to the repository.

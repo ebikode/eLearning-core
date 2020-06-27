@@ -12,7 +12,7 @@ import (
 // ScheduleService  provides schedule operations
 type ScheduleService interface {
 	GetSchedule(uint) *md.Schedule
-	GetSchedulesByCourse(int) *md.Schedule
+	GetSchedulesByCourse(uint) []*md.Schedule
 	GetSchedules(int, int) []*md.Schedule
 	CreateSchedule(md.Schedule) (*md.Schedule, tr.TParam, error)
 	UpdateSchedule(*md.Schedule) (*md.Schedule, tr.TParam, error)
@@ -41,7 +41,7 @@ func (s *service) GetSchedules(page, limit int) []*md.Schedule {
 	return s.sRepo.GetAll(page, limit)
 }
 
-func (s *service) GetSchedulesByCourse(courseID int) *md.Schedule {
+func (s *service) GetSchedulesByCourse(courseID uint) []*md.Schedule {
 	return s.sRepo.GetByCourse(courseID)
 }
 

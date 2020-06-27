@@ -12,7 +12,8 @@ import (
 // ArticleService  provides article operations
 type ArticleService interface {
 	GetArticle(uint) *md.Article
-	GetArticlesByCourse(int) *md.Article
+	GetArticlesByCourse(int) []*md.Article
+	GetArticlesByUser(string, int, int) []*md.Article
 	GetArticles(int, int) []*md.Article
 	CreateArticle(md.Article) (*md.Article, tr.TParam, error)
 	UpdateArticle(*md.Article) (*md.Article, tr.TParam, error)
@@ -41,8 +42,12 @@ func (s *service) GetArticles(page, limit int) []*md.Article {
 	return s.qRepo.GetAll(page, limit)
 }
 
-func (s *service) GetArticlesByCourse(courseID int) *md.Article {
+func (s *service) GetArticlesByCourse(courseID int) []*md.Article {
 	return s.qRepo.GetByCourse(courseID)
+}
+
+func (s *service) GetArticlesByUser(userID string, page, limit int) []*md.Article {
+	return s.qRepo.GetByUser(userID, page, limit)
 }
 
 // CreateArticle Creates New article

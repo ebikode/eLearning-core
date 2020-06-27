@@ -12,7 +12,7 @@ import (
 // QuestionService  provides question operations
 type QuestionService interface {
 	GetQuestion(string) *md.Question
-	GetQuestionsByCourse(int) *md.PubQuestion
+	GetQuestionsByCourse(uint) []*md.PubQuestion
 	GetQuestions(int, int) []*md.Question
 	CreateQuestion(md.Question) (*md.Question, tr.TParam, error)
 	UpdateQuestion(*md.Question) (*md.Question, tr.TParam, error)
@@ -41,7 +41,7 @@ func (s *service) GetQuestions(page, limit int) []*md.Question {
 	return s.qRepo.GetAll(page, limit)
 }
 
-func (s *service) GetQuestionsByCourse(courseID int) *md.PubQuestion {
+func (s *service) GetQuestionsByCourse(courseID uint) []*md.PubQuestion {
 	return s.qRepo.GetByCourse(courseID)
 }
 

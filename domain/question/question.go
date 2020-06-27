@@ -32,7 +32,7 @@ type ValidationFields struct {
 type QuestionRepository interface {
 	// Get returns the question with given ID.
 	Get(string) *md.Question
-	GetByCourse(int) *md.PubQuestion
+	GetByCourse(uint) []*md.PubQuestion
 	// Get returns all questions.
 	GetAll(int, int) []*md.Question
 	// Store a given question to the repository.

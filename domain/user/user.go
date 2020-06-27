@@ -4,6 +4,20 @@ import (
 	md "github.com/ebikode/eLearning-core/model"
 )
 
+// Payload struct to return for validation
+type Payload struct {
+	FirstName string `json:"first_name,omitempty"`
+	LastName  string `json:"last_name,omitempty"`
+	Phone     string `json:"phone,omitempty"`
+	Password  string `json:"password,omitempty"`
+	Username  string `json:"username,omitempty"`
+	Email     string `json:"email,omitempty"`
+	Avatar    string `json:"avatar,omitempty"`
+	Thumb     string `json:"thumb,omitempty"`
+	Role      string `json:"role,omitempty"`
+	Status    string `json:"status,omitempty"`
+}
+
 // ValidationFields struct to return for validation
 type ValidationFields struct {
 	FirstName string `json:"first_name,omitempty"`

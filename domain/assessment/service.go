@@ -16,7 +16,7 @@ type AssessmentService interface {
 	GetAssessments(int, int) []*md.Assessment
 	GetAssessmentsByCourse(int) []*md.Assessment
 	GetSingleAssessmentByCourse(int) *md.Assessment
-	GetUserAssessments(string, int, int) []*md.Assessment
+	GetUserApplicationAssessments(string, string, int, int) []*md.Assessment
 	CreateAssessment(md.Assessment) (*md.Assessment, tr.TParam, error)
 	UpdateAssessment(*md.Assessment) (*md.Assessment, tr.TParam, error)
 }
@@ -67,12 +67,13 @@ func (s *service) GetSingleAssessmentByCourse(courseID int) *md.Assessment {
 
 /*
 * Get all assessments of a user
-* @param userID => the ID of the user whose assessment is needed
+* @param applicationID => the ID of the application whose assessment is needed
+* @param userID => the ID of the user whose application assessment is needed
 * @param page => the page number to return
 * @param limit => limit per page to return
  */
-func (s *service) GetUserAssessments(userID string, page, limit int) []*md.Assessment {
-	return s.pRepo.GetByUser(userID, page, limit)
+func (s *service) GetUserApplicationAssessments(userID, applicationID string, page, limit int) []*md.Assessment {
+	return s.pRepo.GetByApplication(userID, applicationID, page, limit)
 }
 
 // Create New assessment

@@ -11,6 +11,7 @@ import (
 	md "github.com/ebikode/eLearning-core/model"
 	tr "github.com/ebikode/eLearning-core/translation"
 	ut "github.com/ebikode/eLearning-core/utils"
+	"github.com/go-chi/chi"
 )
 
 // GetAssessmentEndpoint fetch a single assessment
@@ -41,6 +42,40 @@ func GetAdminAssessmentsEndpoint(asr ase.AssessmentService) http.HandlerFunc {
 		page, limit := ut.PaginationParams(r)
 
 		assessments := asr.GetAssessments(page, limit)
+
+		var nextPage int
+		if len(assessments) == limit {
+			nextPage = page + 1
+		}
+
+		resp := ut.Message(true, "")
+		resp["current_page"] = page
+		resp["next_page"] = nextPage
+		resp["limit"] = limit
+		resp["assessments"] = assessments
+		ut.Respond(w, r, resp)
+	}
+
+}
+
+// GetUserApplicationAssessmentsEndpoint all assessments of a tutor user
+func GetUserApplicationAssessmentsEndpoint(asr ase.AssessmentService, userType string) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		var userID string
+		// if userType == admin then get the userId from the request parameter
+		if userType == "admin" {
+			userID = chi.URLParam(r, "userID")
+		} else {
+			// Get User Token Data
+			tokenData := r.Context().Value("tokenData").(*md.UserTokenData)
+			userID = string(tokenData.UserID)
+		}
+		applicationID := chi.URLParam(r, "applicationID")
+
+		page, limit := ut.PaginationParams(r)
+
+		assessments := asr.GetUserApplicationAssessments(userID, applicationID, page, limit)
 
 		var nextPage int
 		if len(assessments) == limit {

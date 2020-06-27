@@ -26,5 +26,5 @@ type DashbordData struct {
 	Certificates         int64 `json:"certificates"`
 	Applications         int64 `json:"applications"`
 	Courses              int64 `json:"courses"`
-	AssessmentsCompleted int64 `json:"assessments_completed"`
+	CompletedAssessments int64 `json:"completed_assessments"`
 }

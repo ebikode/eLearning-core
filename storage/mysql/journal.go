@@ -67,27 +67,32 @@ func (jdb *DBJournalStorage) GetAll(page, limit int) []*md.Journal {
 }
 
 // GetByUser Fetch all user' journals from DB
-func (jdb *DBJournalStorage) GetByUser(userID string) []*md.Journal {
+func (jdb *DBJournalStorage) GetByUser(userID string, page, limit int) []*md.Journal {
 	var journals []*md.Journal
 
-	jdb.db.
-		Preload("Course").
-		Preload("User").
-		Where("user_id=?", userID).
-		Find(&journals)
+	pagination.Paging(&pagination.Param{
+		DB: jdb.db.
+			Preload("Course").
+			Preload("User").
+			Where("user_id=?", userID).
+			Find(&journals),
+		Page:    page,
+		Limit:   limit,
+		OrderBy: []string{"created_at desc"},
+	}, &journals)
 	return journals
 }
 
 // GetByCourse ...
-func (jdb *DBJournalStorage) GetByCourse(courseID int) []*md.Assessment {
-	var assessments []*md.Assessment
+func (jdb *DBJournalStorage) GetByCourse(courseID int) []*md.Journal {
+	var journals []*md.Journal
 	// Select resource from database
 	jdb.db.
 		Preload("Course").
 		Preload("User").
-		Where("course_id=?", courseID).Order("created_at desc").Find(&assessments)
+		Where("course_id=?", courseID).Order("created_at desc").Find(&journals)
 
-	return assessments
+	return journals
 }
 
 // Store Add a new journal

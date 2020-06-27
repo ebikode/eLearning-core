@@ -25,7 +25,7 @@ type AssessmentRepository interface {
 	// returns all assessments set with page and limit.
 	GetAll(int, int) []*md.Assessment
 	// returns the assessments with given userID.
-	GetByUser(string, int, int) []*md.Assessment
+	GetByApplication(string, string, int, int) []*md.Assessment
 	GetByCourse(int) []*md.Assessment
 	GetSingleByCourse(int) *md.Assessment
 	// Store a given user assessment to the repository.

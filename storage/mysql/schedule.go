@@ -64,7 +64,7 @@ func (jdb *DBScheduleStorage) GetAll(page, limit int) []*md.Schedule {
 }
 
 // GetByCourse Fetch all course schedules from DB
-func (jdb *DBScheduleStorage) GetByCourse(courseID string) []*md.Schedule {
+func (jdb *DBScheduleStorage) GetByCourse(courseID uint) []*md.Schedule {
 	var schedules []*md.Schedule
 
 	jdb.db.

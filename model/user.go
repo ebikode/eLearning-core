@@ -26,6 +26,7 @@ type User struct {
 	IsEmailVerified bool      `json:"is_email_verified" gorm:"type:tinyint(1);default:0"`
 	Avatar          string    `json:"avatar" gorm:"type:varchar(500)"`
 	Thumb           string    `json:"thumb" gorm:"type:varchar(500)"`
+	Role            string    `json:"role" gorm:"type:enum('user','tutor');default:'user'"`
 	Status          string    `json:"status" gorm:"type:enum('pending','active','suspended','resigned','fired','deleted');default:'pending'"`
 	// Added for request body validation only
 	Token string `json:"token,omitempty" gorm:"-"`
@@ -56,18 +57,18 @@ type PubUser struct {
 
 // TutorDashbordData - struct encapsulating tutor dashboard data
 type TutorDashbordData struct {
-	Certificates         int     `json:"certificates"`
-	Students             float64 `json:"students"`
-	AssessmentsCompleted float64 `json:"assessments_completed"`
-	Courses              float64 `json:"courses"`
+	Certificates         int64 `json:"certificates"`
+	Students             int64 `json:"students"`
+	CompletedAssessments int64 `json:"completed_assessments"`
+	Courses              int64 `json:"courses"`
 }
 
 // UserDashbordData - struct encapsulating user dashboard data
 type UserDashbordData struct {
-	Certificates         int     `json:"certificate"`
-	Applications         float64 `json:"applications"`
-	AssessmentsCompleted float64 `json:"assessments_completed"`
-	Courses              float64 `json:"courses"`
+	Certificates         int64 `json:"certificate"`
+	Applications         int64 `json:"applications"`
+	CompletedAssessments int64 `json:"completed_assessments"`
+	Courses              int64 `json:"courses"`
 }
 
 // TableName Set PubUser's table name to be `Users`

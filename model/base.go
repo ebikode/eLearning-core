@@ -36,6 +36,7 @@ type UserTokenData struct {
 	UserID   string    `json:"customer_id"`
 	DeviceID string    `json:"device_id"`
 	Username string    `json:"username"`
+	Role     string    `json:"role"`
 	ExpireOn time.Time `json:"expire_on"`
 	jwt.StandardClaims
 }

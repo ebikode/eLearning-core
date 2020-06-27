@@ -48,6 +48,7 @@ func JwtUserAuthentication(tokenSecret, appKey string) func(next http.Handler) h
 			//List of endpoints that doesn't require auth
 			notAuth := []string{
 				"/api/v1/user/authenticate",
+				"/api/v1/user/create",
 			}
 			requestPath := r.URL.Path
 

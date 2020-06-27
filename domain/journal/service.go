@@ -12,7 +12,8 @@ import (
 // JournalService  provides journal operations
 type JournalService interface {
 	GetJournal(uint) *md.Journal
-	GetJournalsByCourse(int) *md.Journal
+	GetJournalsByCourse(int) []*md.Journal
+	GetJournalsByUser(string, int, int) []*md.Journal
 	GetJournals(int, int) []*md.Journal
 	CreateJournal(md.Journal) (*md.Journal, tr.TParam, error)
 	UpdateJournal(*md.Journal) (*md.Journal, tr.TParam, error)
@@ -41,8 +42,12 @@ func (s *service) GetJournals(page, limit int) []*md.Journal {
 	return s.qRepo.GetAll(page, limit)
 }
 
-func (s *service) GetJournalsByCourse(courseID int) *md.Journal {
+func (s *service) GetJournalsByCourse(courseID int) []*md.Journal {
 	return s.qRepo.GetByCourse(courseID)
+}
+
+func (s *service) GetJournalsByUser(userID string, page, limit int) []*md.Journal {
+	return s.qRepo.GetByUser(userID, page, limit)
 }
 
 // CreateJournal Creates New journal

@@ -64,28 +64,50 @@ func (gdb *DBGradeStorage) GetAll(page, limit int) []*md.Grade {
 			Preload("Application.Course").
 			Preload("Application.User").
 			Joins("JOIN courses as pr ON pr.id = grades.course_id").
-			Order("created_at desc").
+			Order("scores asc").
 			Find(&grades),
 		Page:    page,
 		Limit:   limit,
-		OrderBy: []string{"created_at desc"},
+		OrderBy: []string{"scores asc"},
 	}, &grades)
 
 	return grades
 
 }
 
-// GetUserGrades Fetch all user' grades from DB
-func (gdb *DBGradeStorage) GetUserGrades(userID string) []*md.Grade {
+// GetByUser Fetch all user' grades from DB
+func (gdb *DBGradeStorage) GetByUser(userID string) []*md.Grade {
 	var grades []*md.Grade
 
 	gdb.db.
 		Preload("Application").
 		Preload("Application.Course").
 		Preload("Application.User").
-		Joins("JOIN courses as pr ON pr.id = grades.course_id").
+		Joins("JOIN courses as co ON co.id = grades.course_id").
 		Where("user_id=?", userID).
+		Order("created_at desc").
 		Find(&grades)
+	return grades
+}
+
+// GetByCourse Fetch all course' grades from DB
+func (gdb *DBGradeStorage) GetByCourse(userID string, courseID, page, limit int) []*md.Grade {
+	var grades []*md.Grade
+
+	pagination.Paging(&pagination.Param{
+		DB: gdb.db.
+			Preload("Application").
+			Preload("Application.Course").
+			Preload("Application.User").
+			Joins("JOIN courses as co ON co.id = grades.course_id").
+			Where("co.user_id=? AND course_id=?", userID, courseID).
+			Order("scores asc").
+			Find(&grades),
+		Page:    page,
+		Limit:   limit,
+		OrderBy: []string{"scores asc"},
+	}, &grades)
+
 	return grades
 }
 

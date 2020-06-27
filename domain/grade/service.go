@@ -7,11 +7,12 @@ import (
 
 // GradeService provides grade operations
 type GradeService interface {
-	GetGradeReports() []*md.GradeReport
-	GetGrade(string, string) *md.Grade
+	GetGradeReports(int, int) []*md.GradeReport
+	GetGrade(uint) *md.Grade
 	GetGrades(int, int) []*md.Grade
 	GetGradesByApplication(int) *md.Grade
-	GetUserGrades(string, int, int) []*md.Grade
+	GetUserGrades(string) []*md.Grade
+	GetCourseGrades(string, int, int, int) []*md.Grade
 	CreateGrade(md.Grade) (*md.Grade, tr.TParam, error)
 	UpdateGrade(*md.Grade) (*md.Grade, tr.TParam, error)
 }
@@ -32,8 +33,8 @@ func NewService(
 * @param userID => the ID of the user whose grade is needed
 * @param gradeID => the ID of the grade requested.
  */
-func (s *service) GetGrade(userID, gradeID string) *md.Grade {
-	return s.pRepo.Get(userID, gradeID)
+func (s *service) GetGrade(gradeID uint) *md.Grade {
+	return s.pRepo.Get(gradeID)
 }
 
 /*
@@ -49,18 +50,32 @@ func (s *service) GetGradesByApplication(applicationID int) *md.Grade {
 	return s.pRepo.GetByApplication(applicationID)
 }
 
-func (s *service) GetGradeReports() []*md.GradeReport {
-	return s.pRepo.GetReports()
+/*
+* Get Grade Reports for each months
+* @param page => the page number to return
+* @param limit => limit per page to return
+ */
+func (s *service) GetGradeReports(page, limit int) []*md.GradeReport {
+	return s.pRepo.GetReports(page, limit)
 }
 
 /*
 * Get all grades of a user
 * @param userID => the ID of the user whose grade is needed
+ */
+func (s *service) GetUserGrades(userID string) []*md.Grade {
+	return s.pRepo.GetByUser(userID)
+}
+
+/*
+* Get all grades of a course
+* @param userID => the ID of the user who own the course
+* @param courseID => the ID of the course whose grade is needed
 * @param page => the page number to return
 * @param limit => limit per page to return
  */
-func (s *service) GetUserGrades(userID string, page, limit int) []*md.Grade {
-	return s.pRepo.GetByUser(userID, page, limit)
+func (s *service) GetCourseGrades(userID string, courseID, page, limit int) []*md.Grade {
+	return s.pRepo.GetByCourse(userID, courseID, page, limit)
 }
 
 // Create New grade

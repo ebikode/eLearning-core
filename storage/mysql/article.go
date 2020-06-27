@@ -20,6 +20,7 @@ func (adb *DBArticleStorage) Get(id uint) *md.Article {
 	article := md.Article{}
 	// Select resource from database
 	err := adb.db.
+		Preload("Course").
 		Preload("User").
 		Where("articles.id=?", id).First(&article).Error
 
@@ -35,6 +36,7 @@ func (adb *DBArticleStorage) GetByUserID(id string) *md.Article {
 	article := md.Article{}
 	// Select resource from database
 	err := adb.db.
+		Preload("Course").
 		Preload("User").
 		Where("user_id=?", id).First(&article).Error
 
@@ -51,6 +53,7 @@ func (adb *DBArticleStorage) GetAll(page, limit int) []*md.Article {
 
 	pagination.Paging(&pagination.Param{
 		DB: adb.db.
+			Preload("Course").
 			Preload("User").
 			Order("created_at desc").
 			Find(&articles),
@@ -64,13 +67,32 @@ func (adb *DBArticleStorage) GetAll(page, limit int) []*md.Article {
 }
 
 // GetByUser Fetch all user' articles from DB
-func (adb *DBArticleStorage) GetByUser(userID string) []*md.Article {
+func (adb *DBArticleStorage) GetByUser(userID string, page, limit int) []*md.Article {
 	var articles []*md.Article
 
+	pagination.Paging(&pagination.Param{
+		DB: adb.db.
+			Preload("Course").
+			Preload("User").
+			Where("user_id=?", userID).
+			Find(&articles),
+		Page:    page,
+		Limit:   limit,
+		OrderBy: []string{"created_at desc"},
+	}, &articles)
+
+	return articles
+}
+
+// GetByCourse ...
+func (adb *DBArticleStorage) GetByCourse(courseID int) []*md.Article {
+	var articles []*md.Article
+	// Select resource from database
 	adb.db.
+		Preload("Course").
 		Preload("User").
-		Where("user_id=?", userID).
-		Find(&articles)
+		Where("course_id=?", courseID).Order("created_at desc").Find(&articles)
+
 	return articles
 }
 

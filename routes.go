@@ -7,15 +7,21 @@ import (
 	alog "github.com/ebikode/eLearning-core/domain/activity_log"
 	adm "github.com/ebikode/eLearning-core/domain/admin"
 	ast "github.com/ebikode/eLearning-core/domain/app_setting"
+	app "github.com/ebikode/eLearning-core/domain/application"
+	art "github.com/ebikode/eLearning-core/domain/article"
+	asm "github.com/ebikode/eLearning-core/domain/assessment"
 	aud "github.com/ebikode/eLearning-core/domain/authd_device"
-	slr "github.com/ebikode/eLearning-core/domain/salary"
-	emp "github.com/ebikode/eLearning-core/domain/user"
+	cou "github.com/ebikode/eLearning-core/domain/course"
+	jon "github.com/ebikode/eLearning-core/domain/journal"
+	que "github.com/ebikode/eLearning-core/domain/question"
+	shd "github.com/ebikode/eLearning-core/domain/schedule"
+	us "github.com/ebikode/eLearning-core/domain/user"
 
-	pyr "github.com/ebikode/eLearning-core/domain/payroll"
-	tax "github.com/ebikode/eLearning-core/domain/tax"
+	grd "github.com/ebikode/eLearning-core/domain/grade"
 	endP "github.com/ebikode/eLearning-core/endpoints"
 	mw "github.com/ebikode/eLearning-core/middlewares"
 	storage "github.com/ebikode/eLearning-core/storage/mysql"
+	ut "github.com/ebikode/eLearning-core/utils"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
@@ -33,34 +39,49 @@ func InitRoutes(cfg config.Constants, mdb *storage.MDatabase) *chi.Mux {
 	// fmt.Println(cfg.Pexportal.BaseURL)
 	// fmt.Println(cfg.Auth.AccountUserTokenSecret)
 
-	var userStorage emp.UserRepository
+	var userStorage us.UserRepository
 	var adminStorage adm.AdminRepository
-	var payrollStorage pyr.PayrollRepository
-	var salaryStorage slr.SalaryRepository
+	var gradeStorage grd.GradeRepository
+	var articleStorage art.ArticleRepository
+	var journalStorage jon.JournalRepository
+	var applicationStorage app.ApplicationRepository
+	var courseStorage cou.CourseRepository
+	var questionStorage que.QuestionRepository
+	var assessmentStorage asm.AssessmentRepository
+	var scheduleStorage shd.ScheduleRepository
 	var authdDeviceStorage aud.AuthdDeviceRepository
 	var activityLogStorage alog.ActivityLogRepository
 	var appSettingStorage ast.AppSettingRepository
-	var taxStorage tax.TaxRepository
 
 	// initalising all domain storage for db manipulation
 	userStorage = storage.NewDBUserStorage(mdb)
 	adminStorage = storage.NewDBAdminStorage(mdb)
-	payrollStorage = storage.NewDBPayrollStorage(mdb)
-	salaryStorage = storage.NewDBSalaryStorage(mdb)
+	gradeStorage = storage.NewDBGradeStorage(mdb)
+	articleStorage = storage.NewDBArticleStorage(mdb)
+	journalStorage = storage.NewDBJournalStorage(mdb)
+	courseStorage = storage.NewDBCourseStorage(mdb)
+	questionStorage = storage.NewDBQuestionStorage(mdb)
+	applicationStorage = storage.NewDBApplicationStorage(mdb)
 	authdDeviceStorage = storage.NewDBAuthdDeviceStorage(mdb)
-	taxStorage = storage.NewDBTaxStorage(mdb)
+	scheduleStorage = storage.NewDBScheduleStorage(mdb)
 	activityLogStorage = storage.NewDBActivityLogStorage(mdb)
 	appSettingStorage = storage.NewDBAppSettingStorage(mdb)
 
-	// Initailizinf application domain services
-	empService := emp.NewService(userStorage)
+	// Initailizing application domain services
+	usService := us.NewService(userStorage)
 	admService := adm.NewService(adminStorage)
 	audService := aud.NewService(authdDeviceStorage)
-	pyrService := pyr.NewService(payrollStorage)
-	taxService := tax.NewService(taxStorage)
+	grdService := grd.NewService(gradeStorage)
+	jonService := jon.NewService(journalStorage)
+	couService := cou.NewService(courseStorage)
+	queService := que.NewService(questionStorage)
+	appService := app.NewService(applicationStorage)
+	shdService := shd.NewService(scheduleStorage)
+	asmService := asm.NewService(assessmentStorage)
 	alogService := alog.NewService(activityLogStorage)
 	astService := ast.NewService(appSettingStorage)
-	salaryService := slr.NewService(salaryStorage)
+	articleService := art.NewService(articleStorage)
+
 	// ustService := ust.NewService(userSettingStorage)
 	// Initialize router
 	router := chi.NewRouter()
@@ -78,28 +99,100 @@ func InitRoutes(cfg config.Constants, mdb *storage.MDatabase) *chi.Mux {
 
 		// USER ROUTES
 
-		r.Get("/user/verify/email/{userID}/{emailToken}", endP.VerifyUserEmailEndpoint(empService))
+		r.Get("/user/verify/email/{userID}/{emailToken}", endP.VerifyUserEmailEndpoint(usService))
 
 		r.Route("/user", func(r chi.Router) {
 			r.Use(
 				mw.JwtUserAuthentication(cfg.Auth.UserTokenSecret, cfg.Server.AppKey), // Authentication middleware
 			)
+			r.Post("/create", endP.CreateUserEndpoint(usService, clientURL, sendGridKey))
 			r.Post("/authenticate", endP.AuthenticateUserEndpoint(cfg.Auth.UserTokenSecret,
-				empService, pyrService, audService))
-			r.Get("/me", endP.GetUserEndpoint(empService))
+				usService, appService, audService))
+			r.Put("/update/{userID}", endP.UpdateUserEndpoint(usService, alogService))
+			r.Get("/me", endP.GetUserEndpoint(usService))
 
-			// r.Route("/settings", func(r chi.Router) {
-			// 	r.Put("/update/billing", endP.UpdateBillingSettingsEndpoint(ustService))
-			// })
-
-			// Tax
-			r.Route("/tax", func(r chi.Router) {
-				r.Get("/", endP.GetUserTaxesEndpoint(taxService, "user"))
+			// Grade Endpoints
+			r.Route("/grades", func(r chi.Router) {
+				r.Get("/", endP.GetUserGradesEndpoint(grdService, ut.UserRole))
 			})
 
-			// Payroll Endpoints
-			r.Route("/payrolls", func(r chi.Router) {
-				r.Get("/", endP.GetUserPayrollsEndpoint(pyrService, "user"))
+			// Questions Endpoints
+			r.Route("/questions", func(r chi.Router) {
+				r.Get("/course/{courseID}", endP.GetCourseQuestionsEndpoint(queService))
+			})
+
+			// Courses Endpoint
+			r.Route("/courses", func(r chi.Router) {
+				r.Get("/", endP.GetCoursesEndpoint(couService, ut.UserRole))
+			})
+
+			// Schedules Endpoint
+			r.Route("/schedules", func(r chi.Router) {
+				r.Get("/{courseID}", endP.GetCourseSchedulesEndpoint(shdService))
+			})
+
+			// Article Endpoint
+			r.Route("/article", func(r chi.Router) {
+				r.Get("/{articleID}", endP.GetArticleEndpoint(articleService))
+				r.Get("/course/{courseID}", endP.GetCourseArticlesEndpoint(articleService))
+			})
+
+			// Journal Endpoint
+			r.Route("/journals", func(r chi.Router) {
+				r.Get("/{journalID}", endP.GetJournalEndpoint(jonService))
+				r.Get("/course/{courseID}", endP.GetCourseJournalsEndpoint(jonService))
+			})
+
+			// Assessment Endpoint
+			r.Route("/assessments", func(r chi.Router) {
+				r.Get("/{applicationID}", endP.GetUserApplicationAssessmentsEndpoint(asmService, ut.UserRole))
+				r.Post("/", endP.CreateAssessmentEndpoint(asmService, usService, queService))
+			})
+
+			// Super Admin Endpoints - Only Super admin access
+			r.Route("/tutor", func(r chi.Router) {
+				r.Use(
+					mw.IsTutorUser(), // Super middleware
+				)
+
+				// Article Endpoint
+				r.Route("/article", func(r chi.Router) {
+					r.Get("/user", endP.GetUserArticlesEndpoint(articleService, ut.UserRole))
+					r.Post("/", endP.CreateArticleEndpoint(articleService, usService))
+					r.Put("/{articleID}", endP.UpdateArticleEndpoint(articleService))
+				})
+
+				// Journal Endpoint
+				r.Route("/journals", func(r chi.Router) {
+					r.Get("/user", endP.GetUserArticlesEndpoint(articleService, ut.UserRole))
+					r.Post("/", endP.CreateJournalEndpoint(jonService, usService))
+					r.Put("/{journalID}", endP.UpdateJournalEndpoint(jonService))
+				})
+
+				// Questions Endpoints
+				r.Route("/questions", func(r chi.Router) {
+					r.Post("/", endP.CreateQuestionEndpoint(queService, usService))
+					r.Put("/{questionID}", endP.UpdateQuestionEndpoint(queService))
+				})
+
+				// Courses Endpoint
+				r.Route("/courses", func(r chi.Router) {
+					r.Get("/", endP.GetUserCoursesEndpoint(couService))
+					r.Post("/", endP.CreateCourseEndpoint(couService, usService))
+					r.Put("/{courseID}", endP.UpdateCourseEndpoint(couService))
+				})
+
+				// Schedules Endpoint
+				r.Route("/schedules", func(r chi.Router) {
+					r.Get("/", endP.GetAdminSchedulesEndpoint(shdService))
+					r.Post("/", endP.CreateScheduleEndpoint(shdService, usService))
+					r.Put("/{scheduleID}", endP.UpdateScheduleEndpoint(shdService))
+				})
+
+				// Assessment Endpoint
+				r.Route("/assessments", func(r chi.Router) {
+					r.Get("/{userID}/{applicationID}", endP.GetUserApplicationAssessmentsEndpoint(asmService, ut.AdminRole))
+				})
 			})
 		})
 
@@ -109,27 +202,31 @@ func InitRoutes(cfg config.Constants, mdb *storage.MDatabase) *chi.Mux {
 				mw.JwtAdminAuthentication(cfg.Auth.AdminTokenSecret), // Authentication middleware
 			)
 
-			r.Post("/authenticate", endP.AuthenticateAdminEndpoint(cfg.Auth.AdminTokenSecret, admService, pyrService))
+			r.Post("/authenticate", endP.AuthenticateAdminEndpoint(cfg.Auth.AdminTokenSecret, admService, appService))
 
 			// Get an admin
 			r.Get("/me", endP.GetAdminEndpoint(admService))
 
 			// Endpoints for Users Access
 			r.Route("/users", func(r chi.Router) {
-				r.Get("/", endP.GetUsersEndpoint(empService))
+				r.Get("/", endP.GetUsersEndpoint(usService))
 			})
 
-			// Salary Endpoint
-			r.Route("/salary", func(r chi.Router) {
-				r.Get("/", endP.GetAdminSalariesEndpoint(salaryService))
-				r.Get("/{salaryID}", endP.GetSalaryEndpoint(salaryService))
+			// Courses Endpoint
+			r.Route("/courses", func(r chi.Router) {
+				r.Get("/", endP.GetCoursesEndpoint(couService, ut.AdminRole))
 			})
 
-			// Tax Enpoints
-			r.Route("/taxes", func(r chi.Router) {
-				r.Get("/", endP.GetAdminTaxesEndpoint(taxService))
-				r.Get("/{taxID}", endP.GetTaxEndpoint(taxService))
-				r.Get("/user/{userID}", endP.GetUserTaxesEndpoint(taxService, "admin"))
+			// Article Endpoint
+			r.Route("/articles", func(r chi.Router) {
+				r.Get("/", endP.GetAdminArticlesEndpoint(articleService))
+				r.Get("/{articleID}", endP.GetArticleEndpoint(articleService))
+			})
+
+			// Journal Endpoint
+			r.Route("/journals", func(r chi.Router) {
+				r.Get("/", endP.GetAdminJournalsEndpoint(jonService))
+				r.Get("/{articleID}", endP.GetJournalEndpoint(jonService))
 			})
 
 			// General Admin App Settings Endpoints
@@ -167,27 +264,12 @@ func InitRoutes(cfg config.Constants, mdb *storage.MDatabase) *chi.Mux {
 					mw.IsManagerAdmin(), //Sales Admin middleware
 				)
 
-				r.Route("/user", func(r chi.Router) {
-					r.Post("/create", endP.CreateUserEndpoint(empService, alogService, clientURL, sendGridKey))
-					r.Put("/update/{userID}", endP.UpdateUserEndpoint(empService, alogService))
-				})
-
-				// Payrolls Endpoints
-				r.Route("/payrolls", func(r chi.Router) {
-					r.Get("/", endP.GetPayrollsEndpoint(pyrService, "admin"))
-					r.Get("/reports", endP.GetPayrollReportsEndpoint(pyrService))
-					r.Get("/filters", endP.GetPayrollAllMonthAndYearEndpoint(pyrService))
-					r.Get("/by_month/{month}/{year}", endP.GetPayrollsByMonthYearEndpoint(pyrService, "admin"))
-					r.Get("/single/{userID}/{payrollID}", endP.GetPayrollEndpoint(pyrService, "admin"))
-					r.Get("/user/{userID}", endP.GetUserPayrollsEndpoint(pyrService, "admin"))
-					r.Put("/update/status", endP.UpdatePayrollStatusEndpoint(pyrService, alogService))
-					r.Put("/update/payment_status", endP.UpdatePayrollPaymentStatusEndpoint(pyrService, alogService))
-				})
-
-				// Salary Endpoint
-				r.Route("/salary", func(r chi.Router) {
-					r.Post("/", endP.CreateSalaryEndpoint(salaryService, empService, alogService))
-					r.Put("/{salaryID}", endP.UpdateSalaryEndpoint(salaryService, alogService))
+				// Grades Endpoints
+				r.Route("/grades", func(r chi.Router) {
+					r.Get("/", endP.GetGradesEndpoint(grdService, ut.AdminRole))
+					r.Get("/reports", endP.GetGradeReportsEndpoint(grdService))
+					r.Get("/user/{userID}", endP.GetUserGradesEndpoint(grdService, ut.AdminRole))
+					r.Get("/course/{courseID}", endP.GetCourseGradesEndpoint(grdService, ut.AdminRole))
 				})
 			})
 

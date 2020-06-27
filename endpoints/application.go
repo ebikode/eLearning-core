@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
-	shd "github.com/ebikode/eLearning-core/domain/schedule"
+	app "github.com/ebikode/eLearning-core/domain/application"
+	cou "github.com/ebikode/eLearning-core/domain/course"
 	usr "github.com/ebikode/eLearning-core/domain/user"
 	md "github.com/ebikode/eLearning-core/model"
 	tr "github.com/ebikode/eLearning-core/translation"
@@ -14,31 +15,31 @@ import (
 	"github.com/go-chi/chi"
 )
 
-// GetScheduleEndpoint fetch a single schedule
-func GetScheduleEndpoint(shs shd.ScheduleService) http.HandlerFunc {
+// GetApplicationEndpoint fetch a single application
+func GetApplicationEndpoint(aps app.ApplicationService) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		scheduleID, _ := strconv.ParseUint(chi.URLParam(r, "scheduleID"), 10, 64)
+		applicationID, _ := strconv.ParseUint(chi.URLParam(r, "applicationID"), 10, 64)
 
-		var schedule *md.Schedule
-		schedule = shs.GetSchedule(uint(scheduleID))
+		var application *md.Application
+		application = aps.GetApplication(uint(applicationID))
 		resp := ut.Message(true, "")
-		resp["schedule"] = schedule
+		resp["application"] = application
 		ut.Respond(w, r, resp)
 	}
 }
 
-// GetAdminSchedulesEndpoint fetch a single schedule
-func GetAdminSchedulesEndpoint(shs shd.ScheduleService) http.HandlerFunc {
+// GetAdminApplicationsEndpoint fetch a single application
+func GetAdminApplicationsEndpoint(aps app.ApplicationService) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		page, limit := ut.PaginationParams(r)
 
-		schedules := shs.GetSchedules(page, limit)
+		applications := aps.GetApplications(page, limit)
 
 		var nextPage int
-		if len(schedules) == limit {
+		if len(applications) == limit {
 			nextPage = page + 1
 		}
 
@@ -46,35 +47,69 @@ func GetAdminSchedulesEndpoint(shs shd.ScheduleService) http.HandlerFunc {
 		resp["current_page"] = page
 		resp["next_page"] = nextPage
 		resp["limit"] = limit
-		resp["schedules"] = schedules
+		resp["applications"] = applications
 		ut.Respond(w, r, resp)
 	}
 
 }
 
-// GetCourseSchedulesEndpoint all schedules of a tutor user
-func GetCourseSchedulesEndpoint(shs shd.ScheduleService) http.HandlerFunc {
+// GetUserApplicationsEndpoint all applications of a tutor user
+func GetUserApplicationsEndpoint(aps app.ApplicationService, userType string) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		courseID, _ := strconv.ParseUint(chi.URLParam(r, "courseID"), 10, 64)
+		var userID string
+		// if userType == admin then get the userId from the request parameter
+		if userType == "admin" {
+			userID = chi.URLParam(r, "userID")
+		} else {
+			// Get User Token Data
+			tokenData := r.Context().Value("tokenData").(*md.UserTokenData)
+			userID = string(tokenData.UserID)
+		}
 
-		schedules := shs.GetSchedulesByCourse(uint(courseID))
+		page, limit := ut.PaginationParams(r)
+
+		applications := aps.GetUserApplications(userID)
+
+		var nextPage int
+		if len(applications) == limit {
+			nextPage = page + 1
+		}
 
 		resp := ut.Message(true, "")
-		resp["schedules"] = schedules
+		resp["current_page"] = page
+		resp["next_page"] = nextPage
+		resp["limit"] = limit
+		resp["applications"] = applications
 		ut.Respond(w, r, resp)
 	}
 
 }
 
-// CreateScheduleEndpoint ...
-func CreateScheduleEndpoint(shs shd.ScheduleService, uss usr.UserService) http.HandlerFunc {
+// GetCourseApplicationsEndpoint all applications of a tutor user
+func GetCourseApplicationsEndpoint(aps app.ApplicationService) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		courseID, _ := strconv.ParseUint(chi.URLParam(r, "courseID"), 10, 64)
+
+		applications := aps.GetApplicationsByCourse(int(courseID))
+
+		resp := ut.Message(true, "")
+		resp["applications"] = applications
+		ut.Respond(w, r, resp)
+	}
+
+}
+
+// CreateApplicationEndpoint ...
+func CreateApplicationEndpoint(aps app.ApplicationService, uss usr.UserService, cos cou.CourseService) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Get User Token Data
 		tokenData := r.Context().Value("tokenData").(*md.UserTokenData)
 		userID := string(tokenData.UserID)
-		payload := shd.Payload{}
+		payload := app.Payload{}
 		err := json.NewDecoder(r.Body).Decode(&payload)
 		fmt.Println("second Error check", err)
 
@@ -105,10 +140,23 @@ func CreateScheduleEndpoint(shs shd.ScheduleService, uss usr.UserService) http.H
 			return
 		}
 
-		// Validate schedule input
-		err = shd.Validate(payload, r)
+		checkCourse := cos.GetCourse(payload.CourseID)
+
+		if checkCourse == nil {
+			tParam = tr.TParam{
+				Key:          "error.course_not_found",
+				TemplateData: nil,
+				PluralCount:  nil,
+			}
+			resp := ut.Message(false, ut.Translate(tParam, r))
+			ut.ErrorRespond(http.StatusBadRequest, w, r, resp)
+			return
+		}
+
+		// Validate application input
+		err = app.Validate(payload, r)
 		if err != nil {
-			validationFields := shd.ValidationFields{}
+			validationFields := app.ValidationFields{}
 			fmt.Println("third Error check", validationFields)
 			b, _ := json.Marshal(err)
 			// Respond with an errortranslated
@@ -120,19 +168,15 @@ func CreateScheduleEndpoint(shs shd.ScheduleService, uss usr.UserService) http.H
 
 		}
 
-		schedule := md.Schedule{
-			CourseID:       payload.CourseID,
-			WeekDay:        payload.WeekDay,
-			TimeFromHour:   payload.TimeFromHour,
-			TimeFromMinute: payload.TimeFromMinute,
-			TimeToHour:     payload.TimeToHour,
-			TimeToMunite:   payload.TimeToMunite,
+		application := md.Application{
+			UserID:   userID,
+			CourseID: payload.CourseID,
 		}
 
-		// Create a schedule
-		newSchedule, errParam, err := shs.CreateSchedule(schedule)
+		// Create a application
+		newApplication, errParam, err := aps.CreateApplication(application)
 		if err != nil {
-			// Check if the error is duplischeduleion error
+			// Check if the error is dupliapplicationion error
 			cErr := ut.CheckUniqueError(r, err)
 			if cErr != nil {
 				ut.ErrorRespond(http.StatusBadRequest, w, r, ut.Message(false, cErr.Error()))
@@ -150,15 +194,15 @@ func CreateScheduleEndpoint(shs shd.ScheduleService, uss usr.UserService) http.H
 		}
 
 		resp := ut.Message(true, ut.Translate(tParam, r))
-		resp["schedule"] = newSchedule
+		resp["application"] = newApplication
 		ut.Respond(w, r, resp)
 
 	}
 
 }
 
-// UpdateScheduleEndpoint
-func UpdateScheduleEndpoint(shs shd.ScheduleService) http.HandlerFunc {
+// UpdateApplicationEndpoint ...
+func UpdateApplicationEndpoint(aps app.ApplicationService) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Get User Token Data
@@ -170,20 +214,20 @@ func UpdateScheduleEndpoint(shs shd.ScheduleService) http.HandlerFunc {
 			TemplateData: nil,
 			PluralCount:  nil,
 		}
-		// Parse the schedule id param
-		scheduleID, pErr := strconv.ParseUint(chi.URLParam(r, "scheduleID"), 10, 64)
+		// Parse the application id param
+		applicationID, pErr := strconv.ParseUint(chi.URLParam(r, "applicationID"), 10, 64)
 
-		if pErr != nil || uint(scheduleID) < 1 {
+		if pErr != nil || uint(applicationID) < 1 {
 			// Respond with an error translated
 			resp := ut.Message(false, ut.Translate(tParam, r))
 			ut.ErrorRespond(http.StatusBadRequest, w, r, resp)
 			return
 		}
 
-		schedulePayload := shd.Payload{}
+		applicationPayload := app.Payload{}
 
 		// dECODE THE REQUEST BODY
-		err := json.NewDecoder(r.Body).Decode(&schedulePayload)
+		err := json.NewDecoder(r.Body).Decode(&applicationPayload)
 
 		if err != nil {
 			// Respond with an error translated
@@ -192,10 +236,10 @@ func UpdateScheduleEndpoint(shs shd.ScheduleService) http.HandlerFunc {
 			return
 		}
 
-		// Validate schedule input
-		err = shd.ValidateUpdates(schedulePayload, r)
+		// Validate application input
+		err = app.ValidateUpdates(applicationPayload, r)
 		if err != nil {
-			validationFields := shd.ValidationFields{}
+			validationFields := app.ValidationFields{}
 			b, _ := json.Marshal(err)
 			// Respond with an errortranslated
 			resp := ut.Message(false, ut.Translate(tParam, r))
@@ -206,10 +250,10 @@ func UpdateScheduleEndpoint(shs shd.ScheduleService) http.HandlerFunc {
 
 		}
 
-		// Get the schedule
-		checkSchedule := shs.GetSchedule(uint(scheduleID))
+		// Get the application
+		checkApplication := aps.GetApplication(uint(applicationID))
 
-		if checkSchedule.Course.UserID != userID {
+		if checkApplication.UserID != userID {
 			tParam = tr.TParam{
 				Key:          "error.course_not_found",
 				TemplateData: nil,
@@ -221,17 +265,12 @@ func UpdateScheduleEndpoint(shs shd.ScheduleService) http.HandlerFunc {
 		}
 
 		// Assign new values
-		checkSchedule.WeekDay = schedulePayload.WeekDay
-		checkSchedule.TimeFromHour = schedulePayload.TimeFromHour
-		checkSchedule.TimeFromMinute = schedulePayload.TimeFromMinute
-		checkSchedule.TimeToHour = schedulePayload.TimeToHour
-		checkSchedule.TimeToMunite = schedulePayload.TimeToMunite
-		checkSchedule.Status = schedulePayload.Status
+		checkApplication.Status = applicationPayload.Status
 
-		// Update a schedule
-		updatedSchedule, errParam, err := shs.UpdateSchedule(checkSchedule)
+		// Update a application
+		updatedApplication, errParam, err := aps.UpdateApplication(checkApplication)
 		if err != nil {
-			// Check if the error is duplischeduleion error
+			// Check if the error is dupliapplicationion error
 			cErr := ut.CheckUniqueError(r, err)
 			if cErr != nil {
 				ut.ErrorRespond(http.StatusBadRequest, w, r, ut.Message(false, cErr.Error()))
@@ -248,7 +287,7 @@ func UpdateScheduleEndpoint(shs shd.ScheduleService) http.HandlerFunc {
 		}
 
 		resp := ut.Message(true, ut.Translate(tParam, r))
-		resp["schedule"] = updatedSchedule
+		resp["application"] = updatedApplication
 		ut.Respond(w, r, resp)
 
 	}

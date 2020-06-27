@@ -35,6 +35,31 @@ func CheckAdminIPAddress() func(next http.Handler) http.Handler {
 	}
 }
 
+// IsTutorUser - Checks if logged in User is a tutor
+func IsTutorUser() func(next http.Handler) http.Handler {
+
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			tokenData := r.Context().Value("tokenData").(*md.UserTokenData)
+			role := string(tokenData.Role)
+
+			// Set Error Message
+			errorMsg := ut.Translate(tr.TParam{Key: "error.unauthorized", TemplateData: nil, PluralCount: nil}, r)
+
+			// Validate
+			if role != ut.TutorRole {
+				response := ut.Message(false, errorMsg)
+
+				ut.ErrorRespond(http.StatusUnauthorized, w, r, response)
+				return
+			}
+			next.ServeHTTP(w, r) //proceed in the middleware chain!
+		}
+
+		return http.HandlerFunc(fn)
+	}
+}
+
 // IsSuperAdmin - Checks if Admin is the super_admin of the account
 func IsSuperAdmin() func(next http.Handler) http.Handler {
 

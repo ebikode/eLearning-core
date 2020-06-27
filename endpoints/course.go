@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	act "github.com/ebikode/eLearning-core/domain/activity_log"
 	cor "github.com/ebikode/eLearning-core/domain/course"
 	usr "github.com/ebikode/eLearning-core/domain/user"
 	md "github.com/ebikode/eLearning-core/model"
@@ -29,14 +28,58 @@ func GetCourseEndpoint(cos cor.CourseService) http.HandlerFunc {
 	}
 }
 
-// GetAdminCoursesEndpoint fetch a single course
-func GetAdminCoursesEndpoint(cos cor.CourseService) http.HandlerFunc {
+// GetUserCourseEndpoint fetch a single course
+func GetUserCourseEndpoint(cos cor.CourseService) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Get User Token Data
+		tokenData := r.Context().Value("tokenData").(*md.UserTokenData)
+		userID := string(tokenData.UserID)
+		courseID, _ := strconv.ParseUint(chi.URLParam(r, "courseID"), 10, 64)
+
+		var course *md.Course
+		course = cos.GetSingleCourseByUserID(userID, uint(courseID))
+		resp := ut.Message(true, "")
+		resp["course"] = course
+		ut.Respond(w, r, resp)
+	}
+}
+
+// GetCoursesEndpoint fetch a single course
+func GetCoursesEndpoint(cos cor.CourseService, userType string) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		page, limit := ut.PaginationParams(r)
 
-		courses := cos.GetCourses(page, limit)
+		courses := cos.GetCourses(page, limit, userType)
+
+		var nextPage int
+		if len(courses) == limit {
+			nextPage = page + 1
+		}
+
+		resp := ut.Message(true, "")
+		resp["current_page"] = page
+		resp["next_page"] = nextPage
+		resp["limit"] = limit
+		resp["courses"] = courses
+		ut.Respond(w, r, resp)
+	}
+
+}
+
+// GetUserCoursesEndpoint all courses of a tutor user
+func GetUserCoursesEndpoint(cos cor.CourseService) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Get User Token Data
+		tokenData := r.Context().Value("tokenData").(*md.UserTokenData)
+		userID := string(tokenData.UserID)
+
+		page, limit := ut.PaginationParams(r)
+
+		courses := cos.GetCoursesByUser(userID, page, limit)
 
 		var nextPage int
 		if len(courses) == limit {
@@ -54,7 +97,7 @@ func GetAdminCoursesEndpoint(cos cor.CourseService) http.HandlerFunc {
 }
 
 // CreateCourseEndpoint ...
-func CreateCourseEndpoint(cos cor.CourseService, uss usr.UserService, acs act.ActivityLogService) http.HandlerFunc {
+func CreateCourseEndpoint(cos cor.CourseService, uss usr.UserService) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Get User Token Data
@@ -131,7 +174,7 @@ func CreateCourseEndpoint(cos cor.CourseService, uss usr.UserService, acs act.Ac
 }
 
 // UpdateCourseEndpoint
-func UpdateCourseEndpoint(cos cor.CourseService, acs act.ActivityLogService) http.HandlerFunc {
+func UpdateCourseEndpoint(cos cor.CourseService) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Get User Token Data

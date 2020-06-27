@@ -3,6 +3,7 @@ package storage
 import (
 	"github.com/biezhi/gorm-paginator/pagination"
 	md "github.com/ebikode/eLearning-core/model"
+	ut "github.com/ebikode/eLearning-core/utils"
 )
 
 // DBCourseStorage encapsulates DB Connection Model
@@ -30,13 +31,13 @@ func (cdb *DBCourseStorage) Get(id uint) *md.Course {
 	return &course
 }
 
-// GetByUserID Fetch Single Course fron DB
-func (cdb *DBCourseStorage) GetByUserID(id string) *md.Course {
+// GetSingleByUser Fetch Single Course fron DB
+func (cdb *DBCourseStorage) GetSingleByUser(userID string, courseID uint) *md.Course {
 	course := md.Course{}
 	// Select resource from database
 	err := cdb.db.
 		Preload("User").
-		Where("user_id=?", id).First(&course).Error
+		Where("user_id=? AND id=?", userID, courseID).First(&course).Error
 
 	if course.ID < 1 || err != nil {
 		return nil
@@ -46,12 +47,27 @@ func (cdb *DBCourseStorage) GetByUserID(id string) *md.Course {
 }
 
 // GetAll Fetch all courses from DB
-func (cdb *DBCourseStorage) GetAll(page, limit int) []*md.Course {
+func (cdb *DBCourseStorage) GetAll(page, limit int, userType string) []*md.Course {
 	var courses []*md.Course
+
+	if userType == ut.AdminRole {
+		pagination.Paging(&pagination.Param{
+			DB: cdb.db.
+				Preload("User").
+				Order("created_at desc").
+				Find(&courses),
+			Page:    page,
+			Limit:   limit,
+			OrderBy: []string{"created_at desc"},
+		}, &courses)
+
+		return courses
+	}
 
 	pagination.Paging(&pagination.Param{
 		DB: cdb.db.
 			Preload("User").
+			Where("status=?", ut.Approved).
 			Order("created_at desc").
 			Find(&courses),
 		Page:    page,
@@ -63,14 +79,20 @@ func (cdb *DBCourseStorage) GetAll(page, limit int) []*md.Course {
 
 }
 
-// GetUserCourses Fetch all user' courses from DB
-func (cdb *DBCourseStorage) GetUserCourses(userID string) []*md.Course {
+// GetByUser Fetch all user' courses from DB
+func (cdb *DBCourseStorage) GetByUser(userID string, page, limit int) []*md.Course {
 	var courses []*md.Course
 
-	cdb.db.
-		Preload("User").
-		Where("user_id=?", userID).
-		Find(&courses)
+	pagination.Paging(&pagination.Param{
+		DB: cdb.db.
+			Preload("User").
+			Where("user_id=?", userID).
+			Find(&courses),
+		Page:    page,
+		Limit:   limit,
+		OrderBy: []string{"created_at desc"},
+	}, &courses)
+
 	return courses
 }
 

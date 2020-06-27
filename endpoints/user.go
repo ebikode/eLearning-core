@@ -14,13 +14,13 @@ import (
 )
 
 // GetUserEndpoint fetch Authenticated user account
-func GetUserEndpoint(emps us.UserService) http.HandlerFunc {
+func GetUserEndpoint(uss us.UserService) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenData := r.Context().Value("tokenData").(*md.UserTokenData)
 		userID := string(tokenData.UserID)
 
-		user := emps.GetUser(userID)
+		user := uss.GetUser(userID)
 		resp := ut.Message(true, "")
 		resp["user"] = user
 		ut.Respond(w, r, resp)
@@ -28,13 +28,13 @@ func GetUserEndpoint(emps us.UserService) http.HandlerFunc {
 }
 
 // GetUsersEndpoint Admin Endpoint for getting users
-func GetUsersEndpoint(emps us.UserService) http.HandlerFunc {
+func GetUsersEndpoint(uss us.UserService) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		page, limit := ut.PaginationParams(r)
 
-		users := emps.GetAllUsers(page, limit)
+		users := uss.GetAllUsers(page, limit)
 
 		var nextPage int
 		if len(users) == limit {
@@ -51,13 +51,13 @@ func GetUsersEndpoint(emps us.UserService) http.HandlerFunc {
 }
 
 // CreateUserEndpoint An endpoint for creating users new account
-func CreateUserEndpoint(emps us.UserService, clientURL, sendGridKey string) http.HandlerFunc {
+func CreateUserEndpoint(uss us.UserService, clientURL, sendGridKey string) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		user := md.User{}
+		payload := us.Payload{}
 
-		err := json.NewDecoder(r.Body).Decode(&user)
+		err := json.NewDecoder(r.Body).Decode(&payload)
 
 		tParam := tr.TParam{
 			Key:          "error.request_error",
@@ -73,7 +73,7 @@ func CreateUserEndpoint(emps us.UserService, clientURL, sendGridKey string) http
 			return
 		}
 
-		checkUser := emps.GetUserByEmail(user.Email)
+		checkUser := uss.GetUserByEmail(payload.Email)
 
 		// if user already exist send pincode to the user for verification/Authentication
 		if checkUser != nil {
@@ -89,10 +89,19 @@ func CreateUserEndpoint(emps us.UserService, clientURL, sendGridKey string) http
 			return
 		}
 
+		user := md.User{}
+
 		// username := strings(user.FirstName).LowerCase() + "_" + strings(user.LastName).LowerCase()
 
-		// REMOVE THIS AFTER DEMO
-		// user.Password = "EMPASSWORD2020"
+		user.FirstName = payload.FirstName
+		user.LastName = payload.LastName
+		user.Phone = payload.Phone
+		user.Username = payload.Username
+		user.Email = payload.Email
+		user.Password = payload.Password
+		user.Avatar = payload.Avatar
+		user.Thumb = payload.Thumb
+		user.Role = payload.Role
 		user.IsEmailVerified = true
 		user.Status = ut.Active
 		// user.Username = username
@@ -111,7 +120,7 @@ func CreateUserEndpoint(emps us.UserService, clientURL, sendGridKey string) http
 		}
 
 		// Create a user
-		newUser, errParam, err := emps.CreateUser(user)
+		newUser, errParam, err := uss.CreateUser(user)
 		if err != nil {
 			fmt.Println("Error:: err")
 			cErr := ut.CheckUniqueError(r, err)
@@ -171,7 +180,7 @@ func CreateUserEndpoint(emps us.UserService, clientURL, sendGridKey string) http
 }
 
 // UpdateUserEndpoint - Update authenticated user account
-func UpdateUserEndpoint(emps us.UserService, acs act.ActivityLogService) http.HandlerFunc {
+func UpdateUserEndpoint(uss us.UserService, acs act.ActivityLogService) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Get Admin Token Data
@@ -212,7 +221,7 @@ func UpdateUserEndpoint(emps us.UserService, acs act.ActivityLogService) http.Ha
 			return
 		}
 		// Get the user
-		us := emps.GetUser(userID)
+		us := uss.GetUser(userID)
 
 		formerEmployerData := us
 
@@ -225,7 +234,7 @@ func UpdateUserEndpoint(emps us.UserService, acs act.ActivityLogService) http.Ha
 		us.Thumb = user.Thumb
 
 		// Update a user
-		updatedEmp, errParam, err := emps.UpdateUser(us)
+		updatedEmp, errParam, err := uss.UpdateUser(us)
 		if err != nil {
 			// Check if the error is duplication error
 			cErr := ut.CheckUniqueError(r, err)
@@ -265,13 +274,13 @@ func UpdateUserEndpoint(emps us.UserService, acs act.ActivityLogService) http.Ha
 }
 
 // VerifyUserEmailEndpoint - Verify user Email
-func VerifyUserEmailEndpoint(emps us.UserService) http.HandlerFunc {
+func VerifyUserEmailEndpoint(uss us.UserService) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID := chi.URLParam(r, "userID")
 		emailToken := chi.URLParam(r, "emailToken")
 
-		checkUser := emps.GetUser(userID)
+		checkUser := uss.GetUser(userID)
 
 		// if user already exist send pincode to the user for verification/Authentication
 		if checkUser == nil {
@@ -303,7 +312,7 @@ func VerifyUserEmailEndpoint(emps us.UserService) http.HandlerFunc {
 		checkUser.IsEmailVerified = true
 		checkUser.Status = "active"
 
-		emps.UpdateUser(checkUser)
+		uss.UpdateUser(checkUser)
 
 		tParam := tr.TParam{
 			Key:          "general.verification_success",

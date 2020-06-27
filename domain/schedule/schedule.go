@@ -30,7 +30,7 @@ type ValidationFields struct {
 type ScheduleRepository interface {
 	// Get returns the schedule with given ID.
 	Get(uint) *md.Schedule
-	GetByCourse(int) *md.Schedule
+	GetByCourse(uint) []*md.Schedule
 	// Get returns all schedules.
 	GetAll(int, int) []*md.Schedule
 	// Store a given schedule to the repository.

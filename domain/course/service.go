@@ -12,8 +12,9 @@ import (
 // CourseService  provides course operations
 type CourseService interface {
 	GetCourse(uint) *md.Course
-	GetCoursesByUser(string) *md.Course
-	GetCourses(int, int) []*md.Course
+	GetSingleCourseByUserID(string, uint) *md.Course
+	GetCoursesByUser(string, int, int) []*md.Course
+	GetCourses(int, int, string) []*md.Course
 	CreateCourse(md.Course) (*md.Course, tr.TParam, error)
 	UpdateCourse(*md.Course) (*md.Course, tr.TParam, error)
 }
@@ -34,15 +35,21 @@ func (s *service) GetCourse(id uint) *md.Course {
 	return s.qRepo.Get(id)
 }
 
+func (s *service) GetSingleCourseByUserID(userID string, courseID uint) *md.Course {
+	return s.qRepo.GetSingleByUser(userID, courseID)
+}
+
 // GetCourses Get all courses from DB
 //
 // @userType == admin | customer
-func (s *service) GetCourses(page, limit int) []*md.Course {
-	return s.qRepo.GetAll(page, limit)
+//  @param page => the page number to return
+//  @param limit => limit per page to return
+func (s *service) GetCourses(page, limit int, userType string) []*md.Course {
+	return s.qRepo.GetAll(page, limit, userType)
 }
 
-func (s *service) GetCoursesByUser(userID string) *md.Course {
-	return s.qRepo.GetByUser(userID)
+func (s *service) GetCoursesByUser(userID string, page, limit int) []*md.Course {
+	return s.qRepo.GetByUser(userID, page, limit)
 }
 
 // CreateCourse Creates New course

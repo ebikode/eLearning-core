@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	act "github.com/ebikode/eLearning-core/domain/activity_log"
 	art "github.com/ebikode/eLearning-core/domain/article"
 	usr "github.com/ebikode/eLearning-core/domain/user"
 	md "github.com/ebikode/eLearning-core/model"
@@ -36,10 +35,10 @@ func GetAdminArticlesEndpoint(ars art.ArticleService) http.HandlerFunc {
 
 		page, limit := ut.PaginationParams(r)
 
-		salaries := ars.GetArticles(page, limit)
+		articles := ars.GetArticles(page, limit)
 
 		var nextPage int
-		if len(salaries) == limit {
+		if len(articles) == limit {
 			nextPage = page + 1
 		}
 
@@ -47,7 +46,56 @@ func GetAdminArticlesEndpoint(ars art.ArticleService) http.HandlerFunc {
 		resp["current_page"] = page
 		resp["next_page"] = nextPage
 		resp["limit"] = limit
-		resp["salaries"] = salaries
+		resp["articles"] = articles
+		ut.Respond(w, r, resp)
+	}
+
+}
+
+// GetUserArticlesEndpoint all articles of a tutor user
+func GetUserArticlesEndpoint(ars art.ArticleService, userType string) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		var userID string
+		// if userType == admin then get the userId from the request parameter
+		if userType == "admin" {
+			userID = chi.URLParam(r, "userID")
+		} else {
+			// Get User Token Data
+			tokenData := r.Context().Value("tokenData").(*md.UserTokenData)
+			userID = string(tokenData.UserID)
+		}
+
+		page, limit := ut.PaginationParams(r)
+
+		articles := ars.GetArticlesByUser(userID, page, limit)
+
+		var nextPage int
+		if len(articles) == limit {
+			nextPage = page + 1
+		}
+
+		resp := ut.Message(true, "")
+		resp["current_page"] = page
+		resp["next_page"] = nextPage
+		resp["limit"] = limit
+		resp["articles"] = articles
+		ut.Respond(w, r, resp)
+	}
+
+}
+
+// GetCourseArticlesEndpoint all articles of a tutor user
+func GetCourseArticlesEndpoint(ars art.ArticleService) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		courseID, _ := strconv.ParseUint(chi.URLParam(r, "courseID"), 10, 64)
+
+		articles := ars.GetArticlesByCourse(int(courseID))
+
+		resp := ut.Message(true, "")
+		resp["articles"] = articles
 		ut.Respond(w, r, resp)
 	}
 
@@ -142,7 +190,7 @@ func CreateArticleEndpoint(ars art.ArticleService, uss usr.UserService) http.Han
 }
 
 // UpdateArticleEndpoint
-func UpdateArticleEndpoint(ars art.ArticleService, acs act.ActivityLogService) http.HandlerFunc {
+func UpdateArticleEndpoint(ars art.ArticleService) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Get User Token Data

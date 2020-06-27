@@ -24,7 +24,8 @@ type ValidationFields struct {
 type JournalRepository interface {
 	// Get returns the journal with given ID.
 	Get(uint) *md.Journal
-	GetByCourse(int) *md.Journal
+	GetByCourse(int) []*md.Journal
+	GetByUser(string, int, int) []*md.Journal
 	// Get returns all journals.
 	GetAll(int, int) []*md.Journal
 	// Store a given journal to the repository.

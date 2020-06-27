@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	act "github.com/ebikode/eLearning-core/domain/activity_log"
 	jon "github.com/ebikode/eLearning-core/domain/journal"
 	usr "github.com/ebikode/eLearning-core/domain/user"
 	md "github.com/ebikode/eLearning-core/model"
@@ -36,10 +35,10 @@ func GetAdminJournalsEndpoint(jos jon.JournalService) http.HandlerFunc {
 
 		page, limit := ut.PaginationParams(r)
 
-		salaries := jos.GetJournals(page, limit)
+		journals := jos.GetJournals(page, limit)
 
 		var nextPage int
-		if len(salaries) == limit {
+		if len(journals) == limit {
 			nextPage = page + 1
 		}
 
@@ -47,7 +46,56 @@ func GetAdminJournalsEndpoint(jos jon.JournalService) http.HandlerFunc {
 		resp["current_page"] = page
 		resp["next_page"] = nextPage
 		resp["limit"] = limit
-		resp["salaries"] = salaries
+		resp["journals"] = journals
+		ut.Respond(w, r, resp)
+	}
+
+}
+
+// GetUserJournalsEndpoint all journals of a tutor user
+func GetUserJournalsEndpoint(jos jon.JournalService, userType string) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		var userID string
+		// if userType == admin then get the userId from the request parameter
+		if userType == "admin" {
+			userID = chi.URLParam(r, "userID")
+		} else {
+			// Get User Token Data
+			tokenData := r.Context().Value("tokenData").(*md.UserTokenData)
+			userID = string(tokenData.UserID)
+		}
+
+		page, limit := ut.PaginationParams(r)
+
+		journals := jos.GetJournalsByUser(userID, page, limit)
+
+		var nextPage int
+		if len(journals) == limit {
+			nextPage = page + 1
+		}
+
+		resp := ut.Message(true, "")
+		resp["current_page"] = page
+		resp["next_page"] = nextPage
+		resp["limit"] = limit
+		resp["journals"] = journals
+		ut.Respond(w, r, resp)
+	}
+
+}
+
+// GetCourseJournalsEndpoint all journals of a tutor user
+func GetCourseJournalsEndpoint(jos jon.JournalService) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		courseID, _ := strconv.ParseUint(chi.URLParam(r, "courseID"), 10, 64)
+
+		journals := jos.GetJournalsByCourse(int(courseID))
+
+		resp := ut.Message(true, "")
+		resp["journals"] = journals
 		ut.Respond(w, r, resp)
 	}
 
@@ -142,7 +190,7 @@ func CreateJournalEndpoint(jos jon.JournalService, uss usr.UserService) http.Han
 }
 
 // UpdateJournalEndpoint
-func UpdateJournalEndpoint(jos jon.JournalService, acs act.ActivityLogService) http.HandlerFunc {
+func UpdateJournalEndpoint(jos jon.JournalService) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Get User Token Data
