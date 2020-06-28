@@ -20,7 +20,7 @@ type ValidationFields struct {
 
 // AssessmentRepository provides access to the Assessment storage.
 type AssessmentRepository interface {
-	Get(string, string) *md.Assessment
+	Get(uint, string) *md.Assessment
 	GetLastAssessment() *md.Assessment
 	// returns all assessments set with page and limit.
 	GetAll(int, int) []*md.Assessment

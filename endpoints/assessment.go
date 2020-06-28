@@ -110,7 +110,6 @@ func CreateAssessmentEndpoint(
 
 		payloads := []ase.Payload{}
 		err := json.NewDecoder(r.Body).Decode(&payloads)
-		fmt.Println("second Error check", err)
 
 		tParam := tr.TParam{
 			Key:          "error.request_error",
@@ -216,23 +215,13 @@ func CreateAssessmentEndpoint(
 				IsCorrect:      isCorrect,
 			}
 
-			fmt.Println(assessment)
-
 			// Create a assessment
-			newAssessment, errParam, err := asr.CreateAssessment(assessment)
-			if err != nil {
-				// Check if the error is dupliassessmention error
-				cErr := ut.CheckUniqueError(r, err)
-				if cErr != nil {
-					ut.ErrorRespond(http.StatusBadRequest, w, r, ut.Message(false, cErr.Error()))
-					return
-				}
-				// Respond with an errortranslated
-				ut.ErrorRespond(http.StatusBadRequest, w, r, ut.Message(false, ut.Translate(errParam, r)))
-				return
+			newAssessment, _, _ := asr.CreateAssessment(assessment)
+
+			if newAssessment != nil {
+				// add the created category to the slice
+				createdAssessments = append(createdAssessments, newAssessment)
 			}
-			// add the created category to the slice
-			createdAssessments = append(createdAssessments, newAssessment)
 		}
 
 		checkApplication.IsAssessmentCompleted = true

@@ -1,7 +1,6 @@
 package assessment
 
 import (
-	"fmt"
 	"net/http"
 
 	md "github.com/ebikode/eLearning-core/model"
@@ -12,7 +11,7 @@ import (
 
 // AssessmentService provides assessment operations
 type AssessmentService interface {
-	GetAssessment(string, string) *md.Assessment
+	GetAssessment(uint, string) *md.Assessment
 	GetLastAssessment() *md.Assessment
 	GetAssessments(int, int) []*md.Assessment
 	GetAssessmentsByCourse(int) []*md.Assessment
@@ -34,12 +33,12 @@ func NewService(
 }
 
 /*
-* Get single assessment of a user
-* @param userID => the ID of the user whose assessment is needed
+* Get single assessment
+* @param applicationID => the ID of the application whose assessment is needed
 * @param assessmentID => the ID of the assessment requested.
  */
-func (s *service) GetAssessment(userID, assessmentID string) *md.Assessment {
-	return s.aRepo.Get(userID, assessmentID)
+func (s *service) GetAssessment(applicationID uint, assessmentID string) *md.Assessment {
+	return s.aRepo.Get(applicationID, assessmentID)
 }
 
 /*
@@ -82,7 +81,6 @@ func (s *service) CreateAssessment(ase md.Assessment) (*md.Assessment, tr.TParam
 	// Generate ID
 	aseID := ut.RandomBase64String(8, "elasm")
 	ase.ID = aseID
-	fmt.Println(ase)
 
 	assessment, err := s.aRepo.Store(ase)
 

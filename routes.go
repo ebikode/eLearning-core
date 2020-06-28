@@ -59,6 +59,7 @@ func InitRoutes(cfg config.Constants, mdb *storage.MDatabase) *chi.Mux {
 	gradeStorage = storage.NewDBGradeStorage(mdb)
 	articleStorage = storage.NewDBArticleStorage(mdb)
 	journalStorage = storage.NewDBJournalStorage(mdb)
+	assessmentStorage = storage.NewDBAssessmentStorage(mdb)
 	courseStorage = storage.NewDBCourseStorage(mdb)
 	questionStorage = storage.NewDBQuestionStorage(mdb)
 	applicationStorage = storage.NewDBApplicationStorage(mdb)
@@ -206,6 +207,11 @@ func InitRoutes(cfg config.Constants, mdb *storage.MDatabase) *chi.Mux {
 				r.Route("/assessments", func(r chi.Router) {
 					r.Get("/{userID}/{applicationID}", endP.GetUserApplicationAssessmentsEndpoint(asmService, ut.AdminRole))
 				})
+
+				// Grade Endpoints
+				r.Route("/grades", func(r chi.Router) {
+					r.Get("/{courseID}", endP.GetCourseGradesEndpoint(grdService, ut.TutorRole))
+				})
 			})
 		})
 
@@ -250,6 +256,14 @@ func InitRoutes(cfg config.Constants, mdb *storage.MDatabase) *chi.Mux {
 				r.Get("/course/{courseID}", endP.GetCourseJournalsEndpoint(jonService))
 			})
 
+			// Grades Endpoints
+			r.Route("/grades", func(r chi.Router) {
+				r.Get("/", endP.GetGradesEndpoint(grdService, ut.AdminRole))
+				r.Get("/reports", endP.GetGradeReportsEndpoint(grdService))
+				r.Get("/user/{userID}", endP.GetUserGradesEndpoint(grdService, ut.AdminRole))
+				r.Get("/course/{userID}/{courseID}", endP.GetCourseGradesEndpoint(grdService, ut.AdminRole))
+			})
+
 			// General Admin App Settings Endpoints
 			r.Route("/app_settings", func(r chi.Router) {
 				r.Get("/", endP.GetAppSettingsEndpoint(astService, "admin"))
@@ -288,14 +302,6 @@ func InitRoutes(cfg config.Constants, mdb *storage.MDatabase) *chi.Mux {
 				// Applications Endpoints
 				r.Route("/applications", func(r chi.Router) {
 					r.Put("/issue_certificate/{applicationID}", endP.IssueCertificateEndpoint(appService))
-				})
-
-				// Grades Endpoints
-				r.Route("/grades", func(r chi.Router) {
-					r.Get("/", endP.GetGradesEndpoint(grdService, ut.AdminRole))
-					r.Get("/reports", endP.GetGradeReportsEndpoint(grdService))
-					r.Get("/user/{userID}", endP.GetUserGradesEndpoint(grdService, ut.AdminRole))
-					r.Get("/course/{courseID}", endP.GetCourseGradesEndpoint(grdService, ut.AdminRole))
 				})
 			})
 

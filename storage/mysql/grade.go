@@ -44,8 +44,7 @@ func (gdb *DBGradeStorage) Get(id uint) *md.Grade {
 		Preload("Application").
 		Preload("Application.Course").
 		Preload("Application.User").
-		Joins("JOIN courses as pr ON pr.id = grades.course_id").
-		Where("grades.id=?", id).First(&grade).Error
+		Where("id=?", id).First(&grade).Error
 
 	if grade.ID < 1 || err != nil {
 		return nil
@@ -63,7 +62,6 @@ func (gdb *DBGradeStorage) GetAll(page, limit int) []*md.Grade {
 			Preload("Application").
 			Preload("Application.Course").
 			Preload("Application.User").
-			Joins("JOIN courses as pr ON pr.id = grades.course_id").
 			Order("scores asc").
 			Find(&grades),
 		Page:    page,
@@ -83,8 +81,8 @@ func (gdb *DBGradeStorage) GetByUser(userID string) []*md.Grade {
 		Preload("Application").
 		Preload("Application.Course").
 		Preload("Application.User").
-		Joins("JOIN courses as co ON co.id = grades.course_id").
-		Where("user_id=?", userID).
+		Joins("JOIN applications as app ON app.id = grades.application_id").
+		Where("app.user_id=?", userID).
 		Order("created_at desc").
 		Find(&grades)
 	return grades
@@ -99,8 +97,9 @@ func (gdb *DBGradeStorage) GetByCourse(userID string, courseID, page, limit int)
 			Preload("Application").
 			Preload("Application.Course").
 			Preload("Application.User").
-			Joins("JOIN courses as co ON co.id = grades.course_id").
-			Where("co.user_id=? AND course_id=?", userID, courseID).
+			Joins("JOIN applications as app ON app.id = grades.application_id").
+			Joins("JOIN courses as co ON co.id = app.course_id").
+			Where("co.user_id=? AND app.course_id=?", userID, courseID).
 			Order("scores asc").
 			Find(&grades),
 		Page:    page,

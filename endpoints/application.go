@@ -300,7 +300,6 @@ func IssueCertificateEndpoint(aps app.ApplicationService) http.HandlerFunc {
 		// Get User Token Data
 		tokenData := r.Context().Value("tokenData").(*md.AdminTokenData)
 		adminID := string(tokenData.AdminID)
-		userID := chi.URLParam(r, "userID")
 		// Translation Param
 		tParam := tr.TParam{
 			Key:          "error.request_error",
@@ -317,38 +316,12 @@ func IssueCertificateEndpoint(aps app.ApplicationService) http.HandlerFunc {
 			return
 		}
 
-		applicationPayload := app.Payload{}
-
-		// dECODE THE REQUEST BODY
-		err := json.NewDecoder(r.Body).Decode(&applicationPayload)
-
-		if err != nil {
-			// Respond with an error translated
-			resp := ut.Message(false, ut.Translate(tParam, r))
-			ut.ErrorRespond(http.StatusBadRequest, w, r, resp)
-			return
-		}
-
-		// Validate application input
-		err = app.ValidateUpdates(applicationPayload, r)
-		if err != nil {
-			validationFields := app.ValidationFields{}
-			b, _ := json.Marshal(err)
-			// Respond with an errortranslated
-			resp := ut.Message(false, ut.Translate(tParam, r))
-			json.Unmarshal(b, &validationFields)
-			resp["error"] = validationFields
-			ut.ErrorRespond(http.StatusBadRequest, w, r, resp)
-			return
-
-		}
-
 		// Get the application
 		checkApplication := aps.GetApplication(uint(applicationID))
 
-		if checkApplication.UserID != userID {
+		if checkApplication == nil {
 			tParam = tr.TParam{
-				Key:          "error.course_not_found",
+				Key:          "error.application_not_found",
 				TemplateData: nil,
 				PluralCount:  nil,
 			}
@@ -360,6 +333,7 @@ func IssueCertificateEndpoint(aps app.ApplicationService) http.HandlerFunc {
 		// Assign new values
 		checkApplication.IsCertificateIssued = true
 		checkApplication.CertificateIssuerID = adminID
+		checkApplication.Status = ut.Completed
 
 		// Update a application
 		updatedApplication, errParam, err := aps.UpdateApplication(checkApplication)

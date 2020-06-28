@@ -15,6 +15,7 @@
         "customer_not_found": "Customer not found",
         "course_not_found": "Course not found",
         "resource_not_found": "Resource not found",
+        "application_not_found": "Application not Found",
         "resource_already_exist": "Resource already exist",
         "assessment_already_completed": "Assessment has already been submitted",
         "email_already_exist": "Email already exist",

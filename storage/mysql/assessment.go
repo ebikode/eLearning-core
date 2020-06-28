@@ -18,10 +18,10 @@ func NewDBAssessmentStorage(db *MDatabase) *DBAssessmentStorage {
 }
 
 // Get assessment using application_id and assessment_id
-func (pdb *DBAssessmentStorage) Get(applicationID uint, assessmentID string) *md.Assessment {
+func (asdb *DBAssessmentStorage) Get(applicationID uint, assessmentID string) *md.Assessment {
 	assessment := md.Assessment{}
 	// Select resource from database
-	err := pdb.db.
+	err := asdb.db.
 		Preload("Application").
 		Preload("Application.Course").
 		Preload("Application.User").
@@ -36,10 +36,10 @@ func (pdb *DBAssessmentStorage) Get(applicationID uint, assessmentID string) *md
 }
 
 // GetLastAssessment ...
-func (pdb *DBAssessmentStorage) GetLastAssessment() *md.Assessment {
+func (asdb *DBAssessmentStorage) GetLastAssessment() *md.Assessment {
 	assessment := md.Assessment{}
 	// Select resource from database
-	err := pdb.db.
+	err := asdb.db.
 		Preload("Application").
 		Preload("Application.Course").
 		Preload("Application.User").
@@ -55,10 +55,10 @@ func (pdb *DBAssessmentStorage) GetLastAssessment() *md.Assessment {
 }
 
 // GetAll Get all assessments
-func (pdb *DBAssessmentStorage) GetAll(page, limit int) []*md.Assessment {
+func (asdb *DBAssessmentStorage) GetAll(page, limit int) []*md.Assessment {
 	var assessments []*md.Assessment
 	// Select resource from database
-	q := pdb.db.
+	q := asdb.db.
 		Preload("Application").
 		Preload("Application.Course").
 		Preload("Application.User").
@@ -75,10 +75,10 @@ func (pdb *DBAssessmentStorage) GetAll(page, limit int) []*md.Assessment {
 }
 
 // GetByApplication Get all assessments of a application  form DB
-func (pdb *DBAssessmentStorage) GetByApplication(userID string, applicationID uint, page, limit int) []*md.Assessment {
+func (asdb *DBAssessmentStorage) GetByApplication(userID string, applicationID uint, page, limit int) []*md.Assessment {
 	var assessments []*md.Assessment
 	// Select resource from database
-	q := pdb.db.
+	q := asdb.db.
 		Preload("Application").
 		Preload("Application.Course").
 		Preload("Application.User").
@@ -98,10 +98,10 @@ func (pdb *DBAssessmentStorage) GetByApplication(userID string, applicationID ui
 }
 
 // GetByCourse ...
-func (pdb *DBAssessmentStorage) GetByCourse(courseID int) []*md.Assessment {
+func (asdb *DBAssessmentStorage) GetByCourse(courseID int) []*md.Assessment {
 	var assessments []*md.Assessment
 	// Select resource from database
-	pdb.db.
+	asdb.db.
 		Preload("Application").
 		Preload("Application.Course").
 		Preload("Application.User").
@@ -112,10 +112,10 @@ func (pdb *DBAssessmentStorage) GetByCourse(courseID int) []*md.Assessment {
 }
 
 // GetSingleByCourse ...
-func (pdb *DBAssessmentStorage) GetSingleByCourse(courseID int) *md.Assessment {
+func (asdb *DBAssessmentStorage) GetSingleByCourse(courseID int) *md.Assessment {
 	assessment := md.Assessment{}
 	// Select resource from database
-	err := pdb.db.
+	err := asdb.db.
 		Preload("Application").
 		Preload("Application.Course").
 		Preload("Application.User").
@@ -131,24 +131,26 @@ func (pdb *DBAssessmentStorage) GetSingleByCourse(courseID int) *md.Assessment {
 }
 
 // Store Add a new assessment
-func (pdb *DBAssessmentStorage) Store(p md.Assessment) (*md.Assessment, error) {
+func (asdb *DBAssessmentStorage) Store(a md.Assessment) (*md.Assessment, error) {
+	fmt.Println("STORE HITS")
 
-	py := p
+	ase := a
+	fmt.Println(ase)
 
-	err := pdb.db.Create(&py).Error
+	err := asdb.db.Create(&ase).Error
 
 	if err != nil {
 		return nil, err
 	}
 
 	fmt.Println("STORE HITS")
-	return pdb.Get(py.ApplicationID, py.ID), nil
+	return asdb.Get(ase.ApplicationID, ase.ID), nil
 }
 
 // Update a assessment
-func (pdb *DBAssessmentStorage) Update(assessment *md.Assessment) (*md.Assessment, error) {
+func (asdb *DBAssessmentStorage) Update(assessment *md.Assessment) (*md.Assessment, error) {
 
-	err := pdb.db.Save(&assessment).Error
+	err := asdb.db.Save(&assessment).Error
 
 	if err != nil {
 		return nil, err
@@ -158,14 +160,14 @@ func (pdb *DBAssessmentStorage) Update(assessment *md.Assessment) (*md.Assessmen
 }
 
 // Delete a assessment
-func (pdb *DBAssessmentStorage) Delete(p *md.Assessment, isPermarnant bool) (bool, error) {
+func (asdb *DBAssessmentStorage) Delete(p *md.Assessment, isPermarnant bool) (bool, error) {
 
 	// var err error
 	// if isPermarnant {
-	// 	err = pdb.db.Unscoped().Delete(p).Error
+	// 	err = asdb.db.Unscoped().Delete(p).Error
 	// }
 	// if !isPermarnant {
-	// 	err = pdb.db.Delete(p).Error
+	// 	err = asdb.db.Delete(p).Error
 	// }
 
 	// if err != nil {
