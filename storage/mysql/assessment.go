@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"fmt"
+
 	"github.com/biezhi/gorm-paginator/pagination"
 	md "github.com/ebikode/eLearning-core/model"
 )
@@ -73,7 +75,7 @@ func (pdb *DBAssessmentStorage) GetAll(page, limit int) []*md.Assessment {
 }
 
 // GetByApplication Get all assessments of a application  form DB
-func (pdb *DBAssessmentStorage) GetByApplication(userID, applicationID string, page, limit int) []*md.Assessment {
+func (pdb *DBAssessmentStorage) GetByApplication(userID string, applicationID uint, page, limit int) []*md.Assessment {
 	var assessments []*md.Assessment
 	// Select resource from database
 	q := pdb.db.
@@ -138,6 +140,8 @@ func (pdb *DBAssessmentStorage) Store(p md.Assessment) (*md.Assessment, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println("STORE HITS")
 	return pdb.Get(py.ApplicationID, py.ID), nil
 }
 

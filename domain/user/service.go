@@ -16,12 +16,13 @@ import (
 // UserService provides user operations
 type UserService interface {
 	GetUserDashboardData(string) *md.UserDashbordData
+	GetTutorDashbordData(string) *md.TutorDashbordData
 	GetUser(string) *md.User
 	GetPubUser(string) *md.PubUser
 	GetAllActivePubUser() []*md.PubUser
 	GetUserByEmail(string) *md.User
 	GetAllUsers(int, int) []*md.PubUser
-	AuthenticateUser(string, string) (*md.User, tr.TParam, error)
+	AuthenticateUser(string, string) (*md.PubUser, tr.TParam, error)
 	CreateUser(md.User) (md.User, tr.TParam, error)
 	UpdateUser(*md.User) (*md.User, tr.TParam, error)
 }
@@ -38,7 +39,7 @@ func NewService(
 }
 
 // Authenticate a user
-func (s *service) AuthenticateUser(email string, password string) (*md.User, tr.TParam, error) {
+func (s *service) AuthenticateUser(email string, password string) (*md.PubUser, tr.TParam, error) {
 	tParam := tr.TParam{
 		Key:          "error.login_error",
 		TemplateData: nil,
@@ -55,7 +56,7 @@ func (s *service) AuthenticateUser(email string, password string) (*md.User, tr.
 		return nil, tParam, errors.New("Error")
 	}
 
-	emp := s.GetUser(user.ID)
+	emp := s.GetPubUser(user.ID)
 
 	return emp, tParam, nil
 
@@ -63,6 +64,10 @@ func (s *service) AuthenticateUser(email string, password string) (*md.User, tr.
 
 func (s *service) GetUserDashboardData(id string) *md.UserDashbordData {
 	return s.userRepo.GetDashbordData(id)
+}
+
+func (s *service) GetTutorDashbordData(id string) *md.TutorDashbordData {
+	return s.userRepo.GetTutorDashbordData(id)
 }
 
 // Get a user
@@ -104,7 +109,7 @@ func (s *service) CreateUser(u md.User) (md.User, tr.TParam, error) {
 	u.PincodeSentAt = time.Now().UTC()
 
 	// Generate user ID
-	uID := ut.RandomBase64String(8, "pxpu")
+	uID := ut.RandomBase64String(8, "elus")
 
 	u.ID = uID
 

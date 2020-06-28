@@ -4,8 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
+	"time"
 
+	app "github.com/ebikode/eLearning-core/domain/application"
 	ase "github.com/ebikode/eLearning-core/domain/assessment"
+	grd "github.com/ebikode/eLearning-core/domain/grade"
 	que "github.com/ebikode/eLearning-core/domain/question"
 	usr "github.com/ebikode/eLearning-core/domain/user"
 	md "github.com/ebikode/eLearning-core/model"
@@ -71,11 +75,11 @@ func GetUserApplicationAssessmentsEndpoint(asr ase.AssessmentService, userType s
 			tokenData := r.Context().Value("tokenData").(*md.UserTokenData)
 			userID = string(tokenData.UserID)
 		}
-		applicationID := chi.URLParam(r, "applicationID")
+		applicationID, _ := strconv.ParseUint(chi.URLParam(r, "applicationID"), 10, 64)
 
 		page, limit := ut.PaginationParams(r)
 
-		assessments := asr.GetUserApplicationAssessments(userID, applicationID, page, limit)
+		assessments := asr.GetUserApplicationAssessments(userID, uint(applicationID), page, limit)
 
 		var nextPage int
 		if len(assessments) == limit {
@@ -93,12 +97,17 @@ func GetUserApplicationAssessmentsEndpoint(asr ase.AssessmentService, userType s
 }
 
 // CreateAssessmentEndpoint ...
-func CreateAssessmentEndpoint(asr ase.AssessmentService, uss usr.UserService, qs que.QuestionService) http.HandlerFunc {
+func CreateAssessmentEndpoint(
+	asr ase.AssessmentService, aps app.ApplicationService,
+	grs grd.GradeService, uss usr.UserService, qs que.QuestionService,
+) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Get User Token Data
 		tokenData := r.Context().Value("tokenData").(*md.UserTokenData)
 		userID := string(tokenData.UserID)
+		applicationID, _ := strconv.ParseUint(chi.URLParam(r, "applicationID"), 10, 64)
+
 		payloads := []ase.Payload{}
 		err := json.NewDecoder(r.Body).Decode(&payloads)
 		fmt.Println("second Error check", err)
@@ -141,8 +150,23 @@ func CreateAssessmentEndpoint(asr ase.AssessmentService, uss usr.UserService, qs
 			ut.ErrorRespond(http.StatusBadRequest, w, r, resp)
 			return
 		}
+
+		checkApplication := aps.GetApplication(uint(applicationID))
+
+		if checkApplication.IsAssessmentCompleted {
+			tParam = tr.TParam{
+				Key:          "error.assessment_already_completed",
+				TemplateData: map[string]interface{}{"Max": 50},
+				PluralCount:  nil,
+			}
+			// Respond with an error translated
+			resp := ut.Message(false, ut.Translate(tParam, r))
+			ut.ErrorRespond(http.StatusBadRequest, w, r, resp)
+			return
+		}
 		// assessments created that will be returned
 		var createdAssessments []*md.Assessment
+		correctAnswers := 0
 
 		checkUser := uss.GetUser(userID)
 
@@ -181,6 +205,7 @@ func CreateAssessmentEndpoint(asr ase.AssessmentService, uss usr.UserService, qs
 
 			if question.Answer == v.SelectedAnswer {
 				isCorrect = true
+				correctAnswers = correctAnswers + 1
 			}
 
 			assessment := md.Assessment{
@@ -190,6 +215,8 @@ func CreateAssessmentEndpoint(asr ase.AssessmentService, uss usr.UserService, qs
 				CorrectAnswer:  question.Answer,
 				IsCorrect:      isCorrect,
 			}
+
+			fmt.Println(assessment)
 
 			// Create a assessment
 			newAssessment, errParam, err := asr.CreateAssessment(assessment)
@@ -207,6 +234,46 @@ func CreateAssessmentEndpoint(asr ase.AssessmentService, uss usr.UserService, qs
 			// add the created category to the slice
 			createdAssessments = append(createdAssessments, newAssessment)
 		}
+
+		checkApplication.IsAssessmentCompleted = true
+		checkApplication.AssessmentEndTimestamp = time.Now().UTC().Unix()
+
+		aps.UpdateApplication(checkApplication)
+
+		countQuestions := qs.CountQuestionsByCourse(checkApplication.CourseID)
+
+		percentageScores := (correctAnswers / countQuestions) * 100
+
+		gradeSymbol := "null"
+
+		if percentageScores >= 70 {
+			gradeSymbol = "A"
+		}
+		if percentageScores < 70 && percentageScores > 59 {
+			gradeSymbol = "B"
+		}
+		if percentageScores < 60 && percentageScores > 49 {
+			gradeSymbol = "C"
+		}
+		if percentageScores < 50 && percentageScores > 39 {
+			gradeSymbol = "D"
+		}
+		if percentageScores < 40 && percentageScores > 29 {
+			gradeSymbol = "D"
+		}
+		if percentageScores < 30 {
+			gradeSymbol = "F"
+		}
+
+		grade := md.Grade{
+			ApplicationID:    uint(applicationID),
+			Scores:           correctAnswers,
+			TotalScores:      countQuestions,
+			PercentageScores: float64(percentageScores),
+			Grade:            gradeSymbol,
+		}
+
+		grs.CreateGrade(grade)
 
 		tParam = tr.TParam{
 			Key:          "general.resource_created",

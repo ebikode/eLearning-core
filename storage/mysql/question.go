@@ -15,13 +15,23 @@ func NewDBQuestionStorage(db *MDatabase) *DBQuestionStorage {
 	return &DBQuestionStorage{db}
 }
 
+// CountByCourse ...
+func (adb *DBQuestionStorage) CountByCourse(courseID uint) int {
+	var count int
+
+	adb.db.Table("questions").
+		Where("course_id=?", courseID).
+		Count(&count)
+	return count
+}
+
 // Get Fetch Single Question fron DB
 func (adb *DBQuestionStorage) Get(id string) *md.Question {
 	question := md.Question{}
 	// Select resource from database
 	err := adb.db.
-		Preload("User").
-		Where("questions.id=?", id).First(&question).Error
+		Preload("Course").
+		Where("id=?", id).First(&question).Error
 
 	if len(question.ID) < 1 || err != nil {
 		return nil
@@ -30,13 +40,13 @@ func (adb *DBQuestionStorage) Get(id string) *md.Question {
 	return &question
 }
 
-// GetSingleByUserID Fetch Single Question fron DB
-func (adb *DBQuestionStorage) GetSingleByUserID(id string) *md.Question {
+// GetSingleByCourseID Fetch Single Question fron DB
+func (adb *DBQuestionStorage) GetSingleByCourseID(id string) *md.Question {
 	question := md.Question{}
 	// Select resource from database
 	err := adb.db.
-		Preload("User").
-		Where("user_id=?", id).First(&question).Error
+		Preload("Course").
+		Where("course_id=?", id).First(&question).Error
 
 	if len(question.ID) < 1 || err != nil {
 		return nil
@@ -51,7 +61,7 @@ func (adb *DBQuestionStorage) GetAll(page, limit int) []*md.Question {
 
 	pagination.Paging(&pagination.Param{
 		DB: adb.db.
-			Preload("User").
+			Preload("Course").
 			Order("created_at desc").
 			Find(&questions),
 		Page:    page,

@@ -33,6 +33,7 @@ type ValidationFields struct {
 //UserRepository Repository provides access to the user storage.
 type UserRepository interface {
 	GetDashbordData(string) *md.UserDashbordData
+	GetTutorDashbordData(string) *md.TutorDashbordData
 	// Get returns the user with given ID.
 	Get(string) *md.User
 	// returns the public user with given ID.

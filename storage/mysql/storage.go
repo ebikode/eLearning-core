@@ -9,7 +9,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
-// MDatabase
+// MDatabase ...
 type MDatabase struct {
 	db *gorm.DB
 }
@@ -71,6 +71,7 @@ func (config *Config) InitDB() (*MDatabase, error) {
 			&md.AppSetting{},
 			&md.AuthdDevice{},
 			&md.Assessment{},
+			&md.Application{},
 			&md.Grade{},
 			&md.Article{},
 			&md.Journal{},

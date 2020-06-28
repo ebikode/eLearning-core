@@ -20,9 +20,9 @@ func AuthenticateUserEndpoint(appSecret string, us usr.UserService, aps app.Appl
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		user := &md.User{}
+		payload := usr.Payload{}
 
-		err := json.NewDecoder(r.Body).Decode(user)
+		err := json.NewDecoder(r.Body).Decode(&payload)
 
 		tParam := tr.TParam{
 			Key:          "error.request_error",
@@ -37,7 +37,9 @@ func AuthenticateUserEndpoint(appSecret string, us usr.UserService, aps app.Appl
 			ut.ErrorRespond(http.StatusBadRequest, w, r, resp)
 			return
 		}
-		user, tParam, err = us.AuthenticateUser(user.Email, user.Password)
+		user := &md.PubUser{}
+
+		user, tParam, err = us.AuthenticateUser(payload.Email, payload.Password)
 
 		if err != nil {
 			resp := ut.Message(false, ut.Translate(tParam, r))
@@ -68,9 +70,20 @@ func AuthenticateUserEndpoint(appSecret string, us usr.UserService, aps app.Appl
 
 		audd, _, _ := au.CreateAuthdDevice(aDevice)
 
-		applications := []*md.Application{}
+		resp := ut.Message(true, ut.Translate(tParam, r))
 
-		dashoardData := us.GetUserDashboardData(user.ID)
+		applications := []*md.Application{}
+		userDashoardData := &md.UserDashbordData{}
+		tutorDashBoardData := &md.TutorDashbordData{}
+
+		if user.Role == ut.TutorRole {
+			tutorDashBoardData = us.GetTutorDashbordData(user.ID)
+			resp["dashboard_data"] = tutorDashBoardData
+		}
+		if user.Role == ut.UserRole {
+			userDashoardData = us.GetUserDashboardData(user.ID)
+			resp["dashboard_data"] = userDashoardData
+		}
 
 		applications = aps.GetUserApplications(user.ID)
 
@@ -91,10 +104,8 @@ func AuthenticateUserEndpoint(appSecret string, us usr.UserService, aps app.Appl
 			TemplateData: nil,
 			PluralCount:  nil,
 		}
-		resp := ut.Message(true, ut.Translate(tParam, r))
 		resp["token"] = tokenString
 		resp["user"] = user
-		resp["dashboard_data"] = dashoardData
 		resp["recent_applications"] = applications
 		ut.Respond(w, r, resp)
 	}

@@ -105,6 +105,7 @@ func InitRoutes(cfg config.Constants, mdb *storage.MDatabase) *chi.Mux {
 			r.Use(
 				mw.JwtUserAuthentication(cfg.Auth.UserTokenSecret, cfg.Server.AppKey), // Authentication middleware
 			)
+
 			r.Post("/create", endP.CreateUserEndpoint(usService, clientURL, sendGridKey))
 			r.Post("/authenticate", endP.AuthenticateUserEndpoint(cfg.Auth.UserTokenSecret,
 				usService, appService, audService))
@@ -114,6 +115,12 @@ func InitRoutes(cfg config.Constants, mdb *storage.MDatabase) *chi.Mux {
 			// Grade Endpoints
 			r.Route("/grades", func(r chi.Router) {
 				r.Get("/", endP.GetUserGradesEndpoint(grdService, ut.UserRole))
+			})
+
+			// Applications Endpoints
+			r.Route("/applications", func(r chi.Router) {
+				r.Get("/", endP.GetUserApplicationsEndpoint(appService, ut.UserRole))
+				r.Post("/{applicationID}", endP.CreateApplicationEndpoint(appService, usService, couService))
 			})
 
 			// Questions Endpoints
@@ -146,31 +153,37 @@ func InitRoutes(cfg config.Constants, mdb *storage.MDatabase) *chi.Mux {
 			// Assessment Endpoint
 			r.Route("/assessments", func(r chi.Router) {
 				r.Get("/{applicationID}", endP.GetUserApplicationAssessmentsEndpoint(asmService, ut.UserRole))
-				r.Post("/", endP.CreateAssessmentEndpoint(asmService, usService, queService))
+				r.Post("/submit/{applicationID}", endP.CreateAssessmentEndpoint(asmService, appService, grdService, usService, queService))
 			})
 
-			// Super Admin Endpoints - Only Super admin access
+			// TUTOR Endpoints - Only Super admin access
 			r.Route("/tutor", func(r chi.Router) {
 				r.Use(
 					mw.IsTutorUser(), // Super middleware
 				)
 
+				// Applications Endpoints
+				r.Route("/applications", func(r chi.Router) {
+					r.Get("/course/{courseID}", endP.GetCourseApplicationsEndpoint(appService))
+				})
+
 				// Article Endpoint
 				r.Route("/article", func(r chi.Router) {
-					r.Get("/user", endP.GetUserArticlesEndpoint(articleService, ut.UserRole))
+					r.Get("/", endP.GetUserArticlesEndpoint(articleService, ut.UserRole))
 					r.Post("/", endP.CreateArticleEndpoint(articleService, usService))
 					r.Put("/{articleID}", endP.UpdateArticleEndpoint(articleService))
 				})
 
 				// Journal Endpoint
 				r.Route("/journals", func(r chi.Router) {
-					r.Get("/user", endP.GetUserArticlesEndpoint(articleService, ut.UserRole))
+					r.Get("/", endP.GetUserJournalsEndpoint(jonService, ut.UserRole))
 					r.Post("/", endP.CreateJournalEndpoint(jonService, usService))
 					r.Put("/{journalID}", endP.UpdateJournalEndpoint(jonService))
 				})
 
 				// Questions Endpoints
 				r.Route("/questions", func(r chi.Router) {
+					r.Get("/course/{courseID}", endP.GetCourseQuestionsEndpoint(queService))
 					r.Post("/", endP.CreateQuestionEndpoint(queService, usService))
 					r.Put("/{questionID}", endP.UpdateQuestionEndpoint(queService))
 				})
@@ -212,6 +225,12 @@ func InitRoutes(cfg config.Constants, mdb *storage.MDatabase) *chi.Mux {
 				r.Get("/", endP.GetUsersEndpoint(usService))
 			})
 
+			// Applications Endpoints
+			r.Route("/applications", func(r chi.Router) {
+				r.Get("/", endP.GetAdminApplicationsEndpoint(appService))
+				r.Get("/course/{courseID}", endP.GetCourseApplicationsEndpoint(appService))
+			})
+
 			// Courses Endpoint
 			r.Route("/courses", func(r chi.Router) {
 				r.Get("/", endP.GetCoursesEndpoint(couService, ut.AdminRole))
@@ -221,12 +240,14 @@ func InitRoutes(cfg config.Constants, mdb *storage.MDatabase) *chi.Mux {
 			r.Route("/articles", func(r chi.Router) {
 				r.Get("/", endP.GetAdminArticlesEndpoint(articleService))
 				r.Get("/{articleID}", endP.GetArticleEndpoint(articleService))
+				r.Get("/course/{courseID}", endP.GetCourseArticlesEndpoint(articleService))
 			})
 
 			// Journal Endpoint
 			r.Route("/journals", func(r chi.Router) {
 				r.Get("/", endP.GetAdminJournalsEndpoint(jonService))
 				r.Get("/{articleID}", endP.GetJournalEndpoint(jonService))
+				r.Get("/course/{courseID}", endP.GetCourseJournalsEndpoint(jonService))
 			})
 
 			// General Admin App Settings Endpoints
@@ -263,6 +284,11 @@ func InitRoutes(cfg config.Constants, mdb *storage.MDatabase) *chi.Mux {
 				r.Use(
 					mw.IsManagerAdmin(), //Sales Admin middleware
 				)
+
+				// Applications Endpoints
+				r.Route("/applications", func(r chi.Router) {
+					r.Put("/issue_certificate/{applicationID}", endP.IssueCertificateEndpoint(appService))
+				})
 
 				// Grades Endpoints
 				r.Route("/grades", func(r chi.Router) {

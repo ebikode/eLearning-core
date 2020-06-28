@@ -3,9 +3,7 @@ package main
 import (
 	adm "github.com/ebikode/eLearning-core/domain/admin"
 	ast "github.com/ebikode/eLearning-core/domain/app_setting"
-	pyr "github.com/ebikode/eLearning-core/domain/payroll"
-	slr "github.com/ebikode/eLearning-core/domain/salary"
-	tax "github.com/ebikode/eLearning-core/domain/tax"
+	cou "github.com/ebikode/eLearning-core/domain/course"
 	emp "github.com/ebikode/eLearning-core/domain/user"
 	jb "github.com/ebikode/eLearning-core/jobs"
 	storage "github.com/ebikode/eLearning-core/storage/mysql"
@@ -17,31 +15,24 @@ func InitJobs(mdb *storage.MDatabase) {
 
 	var adminStorage adm.AdminRepository
 	var userStorage emp.UserRepository
-	var payrollStorage pyr.PayrollRepository
-	var taxStorage tax.TaxRepository
-	var salaryStorage slr.SalaryRepository
+	var courseStorage cou.CourseRepository
 	var appSettingStorage ast.AppSettingRepository
 
 	// initalising all domain storage for db manipulation
 	adminStorage = storage.NewDBAdminStorage(mdb)
-	payrollStorage = storage.NewDBPayrollStorage(mdb)
+	courseStorage = storage.NewDBCourseStorage(mdb)
 	userStorage = storage.NewDBUserStorage(mdb)
-	salaryStorage = storage.NewDBSalaryStorage(mdb)
-	taxStorage = storage.NewDBTaxStorage(mdb)
 	appSettingStorage = storage.NewDBAppSettingStorage(mdb)
 
 	// Initailizing application domain services
 	admService := adm.NewService(adminStorage)
-	empService := emp.NewService(userStorage)
-	pyrService := pyr.NewService(payrollStorage)
-	taxService := tax.NewService(taxStorage)
-	salaryService := slr.NewService(salaryStorage)
+	usService := emp.NewService(userStorage)
+	couService := cou.NewService(courseStorage)
 	astService := ast.NewService(appSettingStorage)
 
 	// Initialize clockwork schedules
 	sched := clockwork.NewScheduler()
 
-	// go runJobs(leaguesURL, fixtureURL, ls, cs, ss, fs, ts)
 	var runJobs = func() {
 
 		// RunCreateDefaultSuperAdmin - Create Default admin  if it doesn't exist
@@ -52,27 +43,7 @@ func InitJobs(mdb *storage.MDatabase) {
 		jb.RunCreateDefaultSettings(astService)
 
 		// Create default users
-		jb.RunCreateDefaultUsers(empService, salaryService)
-
-		// Create Payroll Demo Data
-		jb.RunDefaultPayrollGenerationJob(pyrService, empService, taxService)
-
-		var runGeneratePayrollJob = func() {
-			jb.RunPayrollGenerationJob(pyrService, astService, empService, taxService)
-		}
-
-		var runPayrollPaymentJob = func() {
-			jb.RunPayrollPaymentJob(pyrService, astService)
-		}
-
-		runGeneratePayrollJob()
-		runPayrollPaymentJob()
-
-		// This runs every 12 Hours
-		go sched.Schedule().Every(12).Hours().Do(runGeneratePayrollJob)
-
-		// This runs every 60 Minutes
-		go sched.Schedule().Every(60).Minutes().Do(runPayrollPaymentJob)
+		jb.RunCreateDefaultUsers(usService, couService)
 
 		sched.Run()
 	}

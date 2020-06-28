@@ -1,6 +1,7 @@
 package assessment
 
 import (
+	"fmt"
 	"net/http"
 
 	md "github.com/ebikode/eLearning-core/model"
@@ -16,20 +17,20 @@ type AssessmentService interface {
 	GetAssessments(int, int) []*md.Assessment
 	GetAssessmentsByCourse(int) []*md.Assessment
 	GetSingleAssessmentByCourse(int) *md.Assessment
-	GetUserApplicationAssessments(string, string, int, int) []*md.Assessment
+	GetUserApplicationAssessments(string, uint, int, int) []*md.Assessment
 	CreateAssessment(md.Assessment) (*md.Assessment, tr.TParam, error)
 	UpdateAssessment(*md.Assessment) (*md.Assessment, tr.TParam, error)
 }
 
 type service struct {
-	pRepo AssessmentRepository
+	aRepo AssessmentRepository
 }
 
 // NewService creates assessment service with the necessary dependencies
 func NewService(
-	pRepo AssessmentRepository,
+	aRepo AssessmentRepository,
 ) AssessmentService {
-	return &service{pRepo}
+	return &service{aRepo}
 }
 
 /*
@@ -38,14 +39,14 @@ func NewService(
 * @param assessmentID => the ID of the assessment requested.
  */
 func (s *service) GetAssessment(userID, assessmentID string) *md.Assessment {
-	return s.pRepo.Get(userID, assessmentID)
+	return s.aRepo.Get(userID, assessmentID)
 }
 
 /*
 * GetLastAssessment
  */
 func (s *service) GetLastAssessment() *md.Assessment {
-	return s.pRepo.GetLastAssessment()
+	return s.aRepo.GetLastAssessment()
 }
 
 /*
@@ -54,15 +55,15 @@ func (s *service) GetLastAssessment() *md.Assessment {
 * @param limit => limit per page to return
  */
 func (s *service) GetAssessments(page, limit int) []*md.Assessment {
-	return s.pRepo.GetAll(page, limit)
+	return s.aRepo.GetAll(page, limit)
 }
 
 func (s *service) GetAssessmentsByCourse(courseID int) []*md.Assessment {
-	return s.pRepo.GetByCourse(courseID)
+	return s.aRepo.GetByCourse(courseID)
 }
 
 func (s *service) GetSingleAssessmentByCourse(courseID int) *md.Assessment {
-	return s.pRepo.GetSingleByCourse(courseID)
+	return s.aRepo.GetSingleByCourse(courseID)
 }
 
 /*
@@ -72,17 +73,18 @@ func (s *service) GetSingleAssessmentByCourse(courseID int) *md.Assessment {
 * @param page => the page number to return
 * @param limit => limit per page to return
  */
-func (s *service) GetUserApplicationAssessments(userID, applicationID string, page, limit int) []*md.Assessment {
-	return s.pRepo.GetByApplication(userID, applicationID, page, limit)
+func (s *service) GetUserApplicationAssessments(userID string, applicationID uint, page, limit int) []*md.Assessment {
+	return s.aRepo.GetByApplication(userID, applicationID, page, limit)
 }
 
 // Create New assessment
-func (s *service) CreateAssessment(p md.Assessment) (*md.Assessment, tr.TParam, error) {
+func (s *service) CreateAssessment(ase md.Assessment) (*md.Assessment, tr.TParam, error) {
 	// Generate ID
-	pID := ut.RandomBase64String(8, "EL")
-	p.ID = pID
+	aseID := ut.RandomBase64String(8, "elasm")
+	ase.ID = aseID
+	fmt.Println(ase)
 
-	assessment, err := s.pRepo.Store(p)
+	assessment, err := s.aRepo.Store(ase)
 
 	if err != nil {
 		tParam := tr.TParam{
@@ -99,7 +101,7 @@ func (s *service) CreateAssessment(p md.Assessment) (*md.Assessment, tr.TParam, 
 
 // update existing assessment
 func (s *service) UpdateAssessment(p *md.Assessment) (*md.Assessment, tr.TParam, error) {
-	assessment, err := s.pRepo.Update(p)
+	assessment, err := s.aRepo.Update(p)
 
 	if err != nil {
 		tParam := tr.TParam{

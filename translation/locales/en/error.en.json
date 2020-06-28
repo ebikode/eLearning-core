@@ -16,7 +16,7 @@
         "course_not_found": "Course not found",
         "resource_not_found": "Resource not found",
         "resource_already_exist": "Resource already exist",
-        "salary_already_exist": "Salary already exists for this User",
+        "assessment_already_completed": "Assessment has already been submitted",
         "email_already_exist": "Email already exist",
         "plan_does_not_exist": "Plan doesn't exist",
         "appsetting_not_set": "App Settings not set",

@@ -69,7 +69,7 @@ func (edb *DBUserStorage) GetTutorDashbordData(userID string) *md.TutorDashbordD
 	err = edb.db.Table("applications").
 		Select("count(distinct(applications.id)) as applications").
 		Joins("JOIN courses as co ON co.id = applications.course_id").
-		Where("co.user_id=?", true, userID).
+		Where("co.user_id=?", userID).
 		Scan(&data).Error
 
 	// Completed Assessments
@@ -95,10 +95,8 @@ func (edb *DBUserStorage) GetTutorDashbordData(userID string) *md.TutorDashbordD
 // Authenticate a user
 func (edb *DBUserStorage) Authenticate(email string) (*md.User, error) {
 	user := &md.User{}
-	q := edb.db.
-		Preload("Salary")
 
-	err := q.Where("email = ? AND is_email_verified = ?", email, true).First(&user).Error
+	err := edb.db.Where("email = ? AND is_email_verified = ?", email, true).First(&user).Error
 
 	if user.ID == "" || err != nil {
 		return nil, err
@@ -111,7 +109,6 @@ func (edb *DBUserStorage) Get(id string) *md.User {
 	user := md.User{}
 	// Select User
 	err := edb.db.
-		Preload("Salary").
 		Where("id=?", id).
 		First(&user).Error
 
@@ -127,7 +124,6 @@ func (edb *DBUserStorage) GetPubUser(id string) *md.PubUser {
 	user := md.PubUser{}
 	// Select User
 	err := edb.db.
-		Preload("Salary").
 		Where("id=?", id).
 		First(&user).Error
 
@@ -143,7 +139,6 @@ func (edb *DBUserStorage) GetActivePubUsers() []*md.PubUser {
 	user := []*md.PubUser{}
 	// Select User
 	edb.db.
-		Preload("Salary").
 		Where("status=?", ut.Active).
 		Find(&user)
 
@@ -156,7 +151,6 @@ func (edb *DBUserStorage) GetUserByEmail(email string) *md.User {
 
 	// Select User
 	err := edb.db.
-		Preload("Salary").
 		Where("email=?", email).
 		First(&user).Error
 
@@ -171,11 +165,8 @@ func (edb *DBUserStorage) GetUserByEmail(email string) *md.User {
 func (edb *DBUserStorage) GetUsers(page, limit int) []*md.PubUser {
 	var users []*md.PubUser
 
-	q := edb.db.
-		Preload("Salary")
-
 	pagination.Paging(&pagination.Param{
-		DB:      q.Find(&users),
+		DB:      edb.db.Find(&users),
 		Page:    page,
 		Limit:   limit,
 		OrderBy: []string{"created_at desc"},

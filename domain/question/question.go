@@ -32,6 +32,7 @@ type ValidationFields struct {
 type QuestionRepository interface {
 	// Get returns the question with given ID.
 	Get(string) *md.Question
+	CountByCourse(uint) int
 	GetByCourse(uint) []*md.PubQuestion
 	// Get returns all questions.
 	GetAll(int, int) []*md.Question

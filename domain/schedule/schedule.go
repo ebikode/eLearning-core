@@ -8,10 +8,10 @@ import (
 type Payload struct {
 	CourseID       uint   `json:"course_id"`
 	WeekDay        string `json:"week_day"`
-	TimeFromHour   int    `json:"time_from_hour"`
-	TimeFromMinute int    `json:"time_from_minute"`
-	TimeToHour     int    `json:"time_to_hour"`
-	TimeToMunite   int    `json:"time_to_minute"`
+	TimeFromHour   string `json:"time_from_hour"`
+	TimeFromMinute string `json:"time_from_minute"`
+	TimeToHour     string `json:"time_to_hour"`
+	TimeToMunite   string `json:"time_to_minute"`
 	Status         string `json:"status"`
 }
 

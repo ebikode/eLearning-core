@@ -54,11 +54,11 @@ const Completed = "completed"
 // PayDayKey is key constant for database appsetting
 const PayDayKey = "pay_day"
 
-// PayrollGenerationDayKey is key constant for database Tax
-const PayrollGenerationDayKey = "payroll_generation_day"
+// MaxNumOfQuestions is key constant for database question
+const MaxNumOfQuestions = "max_number_questions"
 
-// IsAutoApproveKey is key constant for database Tax
-const IsAutoApproveKey = "is_auto_approve"
+// MaxNumOfCourses is key constant for database course
+const MaxNumOfCourses = "max_number_courses"
 
 // AutoApprovalNoteKey is key constant for database Tax
 const AutoApprovalNoteKey = "auto_approval_note"

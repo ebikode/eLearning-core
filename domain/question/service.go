@@ -12,6 +12,7 @@ import (
 // QuestionService  provides question operations
 type QuestionService interface {
 	GetQuestion(string) *md.Question
+	CountQuestionsByCourse(uint) int
 	GetQuestionsByCourse(uint) []*md.PubQuestion
 	GetQuestions(int, int) []*md.Question
 	CreateQuestion(md.Question) (*md.Question, tr.TParam, error)
@@ -41,6 +42,10 @@ func (s *service) GetQuestions(page, limit int) []*md.Question {
 	return s.qRepo.GetAll(page, limit)
 }
 
+func (s *service) CountQuestionsByCourse(courseID uint) int {
+	return s.qRepo.CountByCourse(courseID)
+}
+
 func (s *service) GetQuestionsByCourse(courseID uint) []*md.PubQuestion {
 	return s.qRepo.GetByCourse(courseID)
 }
@@ -48,6 +53,10 @@ func (s *service) GetQuestionsByCourse(courseID uint) []*md.PubQuestion {
 // CreateQuestion Creates New question
 func (s *service) CreateQuestion(c md.Question) (*md.Question, tr.TParam, error) {
 
+	// Generate ID
+	uID := ut.RandomBase64String(8, "elqs")
+
+	c.ID = uID
 	question, err := s.qRepo.Store(c)
 
 	if err != nil {

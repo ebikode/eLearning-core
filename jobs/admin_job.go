@@ -5,8 +5,8 @@ import (
 
 	adm "github.com/ebikode/eLearning-core/domain/admin"
 	apset "github.com/ebikode/eLearning-core/domain/app_setting"
-	slr "github.com/ebikode/eLearning-core/domain/salary"
-	emp "github.com/ebikode/eLearning-core/domain/user"
+	cou "github.com/ebikode/eLearning-core/domain/course"
+	usr "github.com/ebikode/eLearning-core/domain/user"
 	md "github.com/ebikode/eLearning-core/model"
 	ut "github.com/ebikode/eLearning-core/utils"
 )
@@ -19,12 +19,12 @@ func RunCreateDefaultSuperAdmin(adms adm.AdminService) {
 
 	if !isDefaultAdminCreated {
 		// password := ut.RandomBase64String(10, "")
-		password := "PR@DM1N2020"
+		password := "EL@DM1N2020"
 		admin := md.Admin{
 			Phone:     "2347067413685",
 			FirstName: "Super",
 			LastName:  "Admin",
-			Email:     "superadmin@payroll-demo.com",
+			Email:     "superadmin@elearning-demo.com",
 			Password:  password,
 			Role:      "super_admin",
 		}
@@ -42,28 +42,16 @@ func RunCreateDefaultSettings(aps apset.AppSettingService) {
 
 	settings := []md.AppSetting{
 		{
-			Name:    "Payroll Generation Day",
-			SKey:    ut.PayrollGenerationDayKey,
-			Value:   "23",
-			Comment: "Used for Automation. Payroll is auto-generated on this day.",
+			Name:    "Maximum Number of Questions",
+			SKey:    ut.MaxNumOfQuestions,
+			Value:   "50",
+			Comment: "Check the maximum number of assessment questions a tutor can add to a course",
 		},
 		{
-			Name:    "Pay Day",
-			SKey:    ut.PayDayKey,
-			Value:   "28",
-			Comment: "Used for Automation. Payment is processed on this day if approval is automated.",
-		},
-		{
-			Name:    "Auto Approve?",
-			SKey:    ut.IsAutoApproveKey,
-			Value:   "false",
-			Comment: "Used for for Approval and Payment Automation.",
-		},
-		{
-			Name:    "Auto Approval Note",
-			SKey:    ut.AutoApprovalNoteKey,
-			Value:   "This payroll was automatically approved by the system.",
-			Comment: "Used for for Approval and Payment Automation Note.",
+			Name:    "Maximum Number of Course",
+			SKey:    ut.MaxNumOfCourses,
+			Value:   "100",
+			Comment: "Check maximum number of courses a tutor can create",
 		},
 	}
 
@@ -79,125 +67,117 @@ func RunCreateDefaultSettings(aps apset.AppSettingService) {
 
 // RunCreateDefaultUsers - Create Default App Settings  if it doesn't exist
 // the first time the server is launch
-func RunCreateDefaultUsers(emps emp.UserService, sls slr.SalaryService) {
-	password := "EMPASSWORD2020"
+func RunCreateDefaultUsers(us usr.UserService, cos cou.CourseService) {
+	password := "ELPASSWORD2020"
 	users := []md.User{
 		{
 			FirstName:       "Ada",
 			LastName:        "Musa",
 			Username:        "adamusa",
-			Position:        "Marketing Officer",
 			Address:         "21 Lagos Nigeria",
 			About:           "Brilliant and hard working",
-			Email:           "adamusa@payroll-demo.com",
+			Email:           "adamusa@elearning-demo.com",
 			Password:        password,
 			Phone:           "08012345678",
-			AccountName:     "Ada Musa",
-			AccountNumber:   "01234534789",
-			BankName:        "Doe Bank",
 			IsEmailVerified: true,
-			Status:          "active",
+			Status:          ut.Active,
+			Role:            ut.UserRole,
 		},
 		{
 			FirstName:       "Adesuwa",
 			LastName:        "Habib",
 			Username:        "adesuwa",
-			Position:        "Software Developer",
 			Address:         "21 Edo Nigeria",
 			About:           "Brilliant and hard working",
-			Email:           "adesuwa@payroll-demo.com",
+			Email:           "adesuwa@elearning-demo.com",
 			Password:        password,
 			Phone:           "08012345677",
-			AccountName:     "Adesuwa Habib",
-			AccountNumber:   "0123456788",
-			BankName:        "Doe Bank",
 			IsEmailVerified: true,
-			Status:          "active",
+			Status:          ut.Active,
+			Role:            ut.TutorRole,
 		},
 		{
 			FirstName:       "Aisha",
 			LastName:        "Emeka",
 			Username:        "aishaemeka",
-			Position:        "Human Resource Personnel",
 			Address:         "21 Kano Nigeria",
 			About:           "Brilliant and hard working",
-			Email:           "aishaemeka@payroll-demo.com",
+			Email:           "aishaemeka@elearning-demo.com",
 			Password:        password,
 			Phone:           "08012345676",
-			AccountName:     "Aisha Emeka",
-			AccountNumber:   "0123456789",
-			BankName:        "Doe Bank",
 			IsEmailVerified: true,
-			Status:          "active",
+			Status:          ut.Active,
+			Role:            ut.TutorRole,
 		},
 		{
 			FirstName:       "Bello",
 			LastName:        "Gigabit",
 			Username:        "bellogig",
-			Position:        "Software Developer",
 			Address:         "21 Lagos Nigeria",
 			About:           "Brilliant and hard working",
-			Email:           "bellogig@payroll-demo.com",
+			Email:           "bellogig@elearning-demo.com",
 			Password:        password,
 			Phone:           "08012345667",
-			AccountName:     "Bello Gigabit",
-			AccountNumber:   "0123456785",
-			BankName:        "Doe Bank",
 			IsEmailVerified: true,
-			Status:          "active",
+			Status:          ut.Active,
+			Role:            ut.UserRole,
 		},
 		{
 			FirstName:       "Osaro",
 			LastName:        "Megabit",
 			Username:        "osaromegabit",
-			Position:        "Accountant",
 			Address:         "21 Lagos Nigeria",
 			About:           "Brilliant and hard working",
-			Email:           "osaromegabit@payroll-demo.com",
+			Email:           "osaromegabit@elearning-demo.com",
 			Password:        password,
 			Phone:           "08012345675",
-			AccountName:     "Osaro Megabit",
-			AccountNumber:   "0123456784",
-			BankName:        "Doe Bank",
 			IsEmailVerified: true,
-			Status:          "active",
+			Status:          ut.Active,
+			Role:            ut.UserRole,
 		},
 		{
 			FirstName:       "Joromi",
 			LastName:        "Doe",
 			Username:        "joromidoe",
-			Position:        "Content Creator",
 			Address:         "21 Lagos Nigeria",
 			About:           "Brilliant and hard working",
-			Email:           "joromidoe@payroll-demo.com",
+			Email:           "joromidoe@elearning-demo.com",
 			Password:        password,
 			Phone:           "08012345674",
-			AccountName:     "Joromi Doe",
-			AccountNumber:   "0123456783",
-			BankName:        "Doe Bank",
 			IsEmailVerified: true,
-			Status:          "active",
+			Status:          ut.Active,
+			Role:            ut.UserRole,
+		},
+	}
+
+	courses := []md.Course{
+		{
+			Title:               "Web Development",
+			Description:         "Focused on Teaching you web development using HTML/CSS and JavaScript",
+			DurationPerQuestion: 30,
+			Status:              ut.Approved,
+		},
+		{
+			Title:               "Building Micro-Services with Golang",
+			Description:         "Focused on Teaching you micro services programming and architecture",
+			DurationPerQuestion: 30,
+			Status:              ut.Approved,
 		},
 	}
 
 	for _, v := range users {
-		salary := md.Salary{
-			Salary:  250000.00,
-			Pension: 5.0,
-			Paye:    7.0,
-			Nsitf:   2.0,
-			Nhf:     2.0,
-			Itf:     2.0,
-		}
-		user := emps.GetUserByEmail(v.Email)
+
+		user := us.GetUserByEmail(v.Email)
 
 		if user == nil {
-			user, _, _ := emps.CreateUser(v)
-			salary.UserID = user.ID
-			if user.Position == "Software Developer" {
-				salary.Salary = 550000.00
+			user, _, _ := us.CreateUser(v)
+
+			if user.Role == ut.TutorRole {
+				for _, cv := range courses {
+					cv.UserID = user.ID
+					cos.CreateCourse(cv)
+				}
 			}
-			sls.CreateSalary(salary)
 		}
 	}
 

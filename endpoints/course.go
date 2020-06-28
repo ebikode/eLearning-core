@@ -145,6 +145,11 @@ func CreateCourseEndpoint(cos cor.CourseService, uss usr.UserService) http.Handl
 			Mode:                payload.Mode,
 		}
 
+		// Generate ref
+		ref := ut.RandomBase64String(8, "elref")
+
+		course.ReferenceNo = ref
+
 		// Create a course
 		newCourse, errParam, err := cos.CreateCourse(course)
 		if err != nil {
@@ -173,7 +178,7 @@ func CreateCourseEndpoint(cos cor.CourseService, uss usr.UserService) http.Handl
 
 }
 
-// UpdateCourseEndpoint
+// UpdateCourseEndpoint ...
 func UpdateCourseEndpoint(cos cor.CourseService) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -239,6 +244,96 @@ func UpdateCourseEndpoint(cos cor.CourseService) http.HandlerFunc {
 		checkCourse.Description = coursePayload.Description
 		checkCourse.Image = coursePayload.Image
 		checkCourse.Mode = coursePayload.Mode
+
+		// Update a course
+		updatedCourse, errParam, err := cos.UpdateCourse(checkCourse)
+		if err != nil {
+			// Check if the error is duplicourseion error
+			cErr := ut.CheckUniqueError(r, err)
+			if cErr != nil {
+				ut.ErrorRespond(http.StatusBadRequest, w, r, ut.Message(false, cErr.Error()))
+				return
+			}
+			// Respond with an errortranslated
+			ut.ErrorRespond(http.StatusBadRequest, w, r, ut.Message(false, ut.Translate(errParam, r)))
+			return
+		}
+		tParam = tr.TParam{
+			Key:          "general.update_success",
+			TemplateData: nil,
+			PluralCount:  nil,
+		}
+
+		resp := ut.Message(true, ut.Translate(tParam, r))
+		resp["course"] = updatedCourse
+		ut.Respond(w, r, resp)
+
+	}
+
+}
+
+// UpdateCourseStatusEndpoint ...
+func UpdateCourseStatusEndpoint(cos cor.CourseService) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Get User Token Data
+		tokenData := r.Context().Value("tokenData").(*md.UserTokenData)
+		userID := string(tokenData.UserID)
+
+		// Translation Param
+		tParam := tr.TParam{
+			Key:          "error.request_error",
+			TemplateData: nil,
+			PluralCount:  nil,
+		}
+		// Parse the course id param
+		courseID, pErr := strconv.ParseUint(chi.URLParam(r, "courseID"), 10, 64)
+		if pErr != nil || uint(courseID) < 1 {
+			// Respond with an error translated
+			resp := ut.Message(false, ut.Translate(tParam, r))
+			ut.ErrorRespond(http.StatusBadRequest, w, r, resp)
+			return
+		}
+		coursePayload := cor.Payload{}
+		// dECODE THE REQUEST BODY
+		err := json.NewDecoder(r.Body).Decode(&coursePayload)
+
+		if err != nil {
+			// Respond with an error translated
+			resp := ut.Message(false, ut.Translate(tParam, r))
+			ut.ErrorRespond(http.StatusBadRequest, w, r, resp)
+			return
+		}
+
+		// Validate course input
+		err = cor.ValidateUpdates(coursePayload, r)
+		if err != nil {
+			validationFields := cor.ValidationFields{}
+			b, _ := json.Marshal(err)
+			// Respond with an errortranslated
+			resp := ut.Message(false, ut.Translate(tParam, r))
+			json.Unmarshal(b, &validationFields)
+			resp["error"] = validationFields
+			ut.ErrorRespond(http.StatusBadRequest, w, r, resp)
+			return
+
+		}
+		fmt.Printf("courseID:: %v \n", uint(courseID))
+		// Get the course
+		checkCourse := cos.GetCourse(uint(courseID))
+
+		if checkCourse.UserID != userID {
+			tParam = tr.TParam{
+				Key:          "error.course_not_found",
+				TemplateData: nil,
+				PluralCount:  nil,
+			}
+			resp := ut.Message(false, ut.Translate(tParam, r))
+			ut.ErrorRespond(http.StatusBadRequest, w, r, resp)
+			return
+		}
+
+		// Assign new values
 		checkCourse.Status = coursePayload.Status
 
 		// Update a course

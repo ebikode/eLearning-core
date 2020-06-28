@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	que "github.com/ebikode/eLearning-core/domain/question"
 	usr "github.com/ebikode/eLearning-core/domain/user"
@@ -122,6 +123,7 @@ func CreateQuestionEndpoint(qs que.QuestionService, uss usr.UserService) http.Ha
 			ut.ErrorRespond(http.StatusBadRequest, w, r, resp)
 			return
 		}
+
 		// questions created that will be returned
 		var createdQuestions []*md.Question
 
@@ -156,31 +158,41 @@ func CreateQuestionEndpoint(qs que.QuestionService, uss usr.UserService) http.Ha
 
 			}
 
-			question := md.Question{
-				CourseID: v.CourseID,
-				Question: v.Question,
-				OptionA:  v.OptionA,
-				OptionB:  v.OptionB,
-				OptionC:  v.OptionC,
-				Answer:   v.Answer,
-				Solution: v.Solution,
-			}
+			countQuestions := qs.CountQuestionsByCourse(v.CourseID)
 
-			// Create a question
-			newQuestion, errParam, err := qs.CreateQuestion(question)
-			if err != nil {
-				// Check if the error is dupliquestionion error
-				cErr := ut.CheckUniqueError(r, err)
-				if cErr != nil {
-					ut.ErrorRespond(http.StatusBadRequest, w, r, ut.Message(false, cErr.Error()))
+			v.OptionA = strings.ToLower(v.OptionA)
+			v.OptionB = strings.ToLower(v.OptionB)
+			v.OptionC = strings.ToLower(v.OptionC)
+			v.Answer = strings.ToLower(v.Answer)
+
+			if countQuestions < 50 {
+				question := md.Question{
+					CourseID: v.CourseID,
+					Question: v.Question,
+					OptionA:  v.OptionA,
+					OptionB:  v.OptionB,
+					OptionC:  v.OptionC,
+					Answer:   v.Answer,
+					Solution: v.Solution,
+				}
+
+				// Create a question
+				newQuestion, errParam, err := qs.CreateQuestion(question)
+				if err != nil {
+					// Check if the error is dupliquestionion error
+					cErr := ut.CheckUniqueError(r, err)
+					if cErr != nil {
+						ut.ErrorRespond(http.StatusBadRequest, w, r, ut.Message(false, cErr.Error()))
+						return
+					}
+					// Respond with an errortranslated
+					ut.ErrorRespond(http.StatusBadRequest, w, r, ut.Message(false, ut.Translate(errParam, r)))
 					return
 				}
-				// Respond with an errortranslated
-				ut.ErrorRespond(http.StatusBadRequest, w, r, ut.Message(false, ut.Translate(errParam, r)))
-				return
+				// add the created category to the slice
+				createdQuestions = append(createdQuestions, newQuestion)
 			}
-			// add the created category to the slice
-			createdQuestions = append(createdQuestions, newQuestion)
+
 		}
 
 		tParam = tr.TParam{
@@ -259,6 +271,11 @@ func UpdateQuestionEndpoint(qs que.QuestionService) http.HandlerFunc {
 			ut.ErrorRespond(http.StatusBadRequest, w, r, resp)
 			return
 		}
+
+		questionPayload.OptionA = strings.ToLower(questionPayload.OptionA)
+		questionPayload.OptionB = strings.ToLower(questionPayload.OptionB)
+		questionPayload.OptionC = strings.ToLower(questionPayload.OptionC)
+		questionPayload.Answer = strings.ToLower(questionPayload.Answer)
 
 		// Assign new values
 		checkQuestion.Question = questionPayload.Question

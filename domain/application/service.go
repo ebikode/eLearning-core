@@ -53,6 +53,10 @@ func (s *service) GetApplicationsByCourse(courseID int) []*md.Application {
 // CreateApplication Creates New application
 func (s *service) CreateApplication(c md.Application) (*md.Application, tr.TParam, error) {
 
+	// Generate ref
+	ref := ut.RandomBase64String(8, "elref")
+	c.ReferenceNo = ref
+
 	application, err := s.aRepo.Store(c)
 
 	if err != nil {
