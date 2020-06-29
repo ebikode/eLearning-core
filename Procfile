@@ -1,1 +1,1 @@
-web: bin/payroll-core
+web: bin/eLearning-core
