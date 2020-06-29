@@ -1,0 +1,25 @@
+{
+    "validation": {
+        "min": "{{.Field}} must be {{.Limit}} or more characters.",
+        "max": "{{.Field}} must be {{.Limit}} or lesser characters.",
+        "length": "{{.Field}} must be between {{.Min}} and {{.Max}}.",
+        "required": "{{.Field}} is required.",
+        "name": "{{.Field}} must be a valid name.",
+        "date": "Invalid date values. Use this format (2006-01-01 15:04:05)",
+        "lesser": "Values submitted is lesser than the number required. {{.Min}}",
+        "greater": "Values submitted is greater than the number required. {{.Max}}",
+        "already_set": "Values already set",
+        "email": "Enter a valid email address",
+        "url": "Enter a valid url address",
+        "alphanum": "{{.Field}} Must be a Alpha-numeric.",
+        "special_char": "{{.Field}} must be a Special Char e.g &#%.",
+        "enum": "{{.Field}} must contain one of the valid values: {{.Values}}..",
+        "string": "{{.Field}} must be in letters only.",
+        "digit": "{{.Field}} must be in digits.",
+        "float": "{{.Field}} must be a floating point number.",
+        "number": "{{.Field}} must be a number only.",
+        "unique": "The {{.Field}} already exist.",
+        "invalid_login": "Invalid Authentication PIN",
+        "invalid_token": "Invalid/Malformed authentication token"
+    }
+}
