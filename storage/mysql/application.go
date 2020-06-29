@@ -21,6 +21,7 @@ func (adb *DBApplicationStorage) Get(id uint) *md.Application {
 	// Select resource from database
 	err := adb.db.
 		Preload("Course").
+		Preload("Grade").
 		Preload("User").
 		Where("applications.id=?", id).First(&application).Error
 
@@ -38,6 +39,7 @@ func (adb *DBApplicationStorage) GetAll(page, limit int) []*md.Application {
 	pagination.Paging(&pagination.Param{
 		DB: adb.db.
 			Preload("Course").
+			Preload("Grade").
 			Preload("User").
 			Order("created_at desc").
 			Find(&applications),
@@ -56,6 +58,7 @@ func (adb *DBApplicationStorage) GetByUser(userID string) []*md.Application {
 
 	adb.db.
 		Preload("Course").
+		Preload("Grade").
 		Preload("User").
 		Where("user_id=?", userID).
 		Find(&applications)
@@ -68,8 +71,24 @@ func (adb *DBApplicationStorage) GetByCourse(courseID int) []*md.Application {
 	// Select resource from database
 	adb.db.
 		Preload("Course").
+		Preload("Grade").
 		Preload("User").
 		Where("course_id=?", courseID).Order("created_at desc").Find(&applications)
+
+	return applications
+}
+
+// GetByCourse ...
+func (adb *DBApplicationStorage) GetByCourseOwner(userID string) []*md.Application {
+	var applications []*md.Application
+	// Select resource from database
+	adb.db.
+		Preload("Course").
+		Preload("Grade").
+		Preload("User").
+		Joins("JOIN courses as co ON co.id = applications.course_id").
+		Where("co.user_id=?", userID).
+		Order("created_at desc").Find(&applications)
 
 	return applications
 }

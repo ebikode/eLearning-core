@@ -86,7 +86,7 @@ func GetUserApplicationsEndpoint(aps app.ApplicationService, userType string) ht
 
 }
 
-// GetCourseApplicationsEndpoint all applications of a tutor user
+// GetCourseApplicationsEndpoint all applications of a user
 func GetCourseApplicationsEndpoint(aps app.ApplicationService) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -94,6 +94,30 @@ func GetCourseApplicationsEndpoint(aps app.ApplicationService) http.HandlerFunc 
 		courseID, _ := strconv.ParseUint(chi.URLParam(r, "courseID"), 10, 64)
 
 		applications := aps.GetApplicationsByCourse(int(courseID))
+
+		resp := ut.Message(true, "")
+		resp["applications"] = applications
+		ut.Respond(w, r, resp)
+	}
+
+}
+
+// GetCourseOwnerApplicationsEndpoint all applications of a tutor user
+func GetCourseOwnerApplicationsEndpoint(aps app.ApplicationService, userType string) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		var userID string
+		// if userType == admin then get the userId from the request parameter
+		if userType == "admin" {
+			userID = chi.URLParam(r, "userID")
+		} else {
+			// Get User Token Data
+			tokenData := r.Context().Value("tokenData").(*md.UserTokenData)
+			userID = string(tokenData.UserID)
+		}
+
+		applications := aps.GetApplicationsByCourseOwner(userID)
 
 		resp := ut.Message(true, "")
 		resp["applications"] = applications

@@ -107,3 +107,10 @@ func ValidateUpdates(course Payload, r *http.Request) error {
 		validation.Field(&course.DurationPerQuestion, ut.RequiredRule(r, "general.duration")...),
 	)
 }
+
+// ValidateStatusUpdates Function for validating course update input
+func ValidateStatusUpdates(course Payload, r *http.Request) error {
+	return validation.ValidateStruct(&course,
+		validation.Field(&course.Status, ut.RequiredRule(r, "general.status")...),
+	)
+}

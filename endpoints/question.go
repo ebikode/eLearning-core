@@ -74,6 +74,26 @@ func GetCourseQuestionsEndpoint(qus que.QuestionService) http.HandlerFunc {
 
 }
 
+// GetTutorCourseQuestionsEndpoint all questions of a tutor user
+func GetTutorCourseQuestionsEndpoint(qus que.QuestionService) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		// Get User Token Data
+		tokenData := r.Context().Value("tokenData").(*md.UserTokenData)
+		userID := string(tokenData.UserID)
+
+		courseID, _ := strconv.ParseUint(chi.URLParam(r, "courseID"), 10, 64)
+
+		schedules := qus.GetQuestionsByCourseOwner(userID, uint(courseID))
+
+		resp := ut.Message(true, "")
+		resp["questions"] = schedules
+		ut.Respond(w, r, resp)
+	}
+
+}
+
 // CreateQuestionEndpoint ...
 func CreateQuestionEndpoint(qs que.QuestionService, uss usr.UserService) http.HandlerFunc {
 

@@ -34,6 +34,7 @@ type QuestionRepository interface {
 	Get(string) *md.Question
 	CountByCourse(uint) int
 	GetByCourse(uint) []*md.PubQuestion
+	GetByCourseOwner(string, uint) []*md.Question
 	// Get returns all questions.
 	GetAll(int, int) []*md.Question
 	// Store a given question to the repository.

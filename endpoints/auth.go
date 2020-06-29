@@ -60,7 +60,7 @@ func AuthenticateUserEndpoint(appSecret string, us usr.UserService, aps app.Appl
 			DeviceOS:       deviceInfo.DeviceOS,
 			OSVersion:      deviceInfo.OSVersion,
 			DeviceType:     deviceInfo.Type,
-			AccessType:     "mobile_app",
+			AccessType:     "web_app",
 			Status:         "active",
 		}
 
@@ -79,13 +79,13 @@ func AuthenticateUserEndpoint(appSecret string, us usr.UserService, aps app.Appl
 		if user.Role == ut.TutorRole {
 			tutorDashBoardData = us.GetTutorDashbordData(user.ID)
 			resp["dashboard_data"] = tutorDashBoardData
+			applications = aps.GetApplicationsByCourseOwner(user.ID)
 		}
 		if user.Role == ut.UserRole {
 			userDashoardData = us.GetUserDashboardData(user.ID)
 			resp["dashboard_data"] = userDashoardData
+			applications = aps.GetUserApplications(user.ID)
 		}
-
-		applications = aps.GetUserApplications(user.ID)
 
 		// Create JWT token for application
 		tk := &md.UserTokenData{

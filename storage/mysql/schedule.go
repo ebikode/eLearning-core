@@ -3,6 +3,7 @@ package storage
 import (
 	"github.com/biezhi/gorm-paginator/pagination"
 	md "github.com/ebikode/eLearning-core/model"
+	ut "github.com/ebikode/eLearning-core/utils"
 )
 
 // DBScheduleStorage encapsulates DB Connection Model
@@ -69,7 +70,19 @@ func (jdb *DBScheduleStorage) GetByCourse(courseID uint) []*md.Schedule {
 
 	jdb.db.
 		Preload("Course").
-		Where("course_id=?", courseID).
+		Where("course_id=? AND status=?", courseID, ut.Active).
+		Find(&schedules)
+	return schedules
+}
+
+// GetByCourseOwner Fetch all course owner schedules from DB
+func (jdb *DBScheduleStorage) GetByCourseOwner(userID string, courseID uint) []*md.Schedule {
+	var schedules []*md.Schedule
+
+	jdb.db.
+		Preload("Course").
+		Joins("JOIN courses as co ON co.id = schedules.course_id").
+		Where("course_id=? AND co.user_id=?", courseID, userID).
 		Find(&schedules)
 	return schedules
 }

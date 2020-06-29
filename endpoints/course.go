@@ -276,9 +276,6 @@ func UpdateCourseEndpoint(cos cor.CourseService) http.HandlerFunc {
 func UpdateCourseStatusEndpoint(cos cor.CourseService) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Get User Token Data
-		tokenData := r.Context().Value("tokenData").(*md.UserTokenData)
-		userID := string(tokenData.UserID)
 
 		// Translation Param
 		tParam := tr.TParam{
@@ -306,7 +303,7 @@ func UpdateCourseStatusEndpoint(cos cor.CourseService) http.HandlerFunc {
 		}
 
 		// Validate course input
-		err = cor.ValidateUpdates(coursePayload, r)
+		err = cor.ValidateStatusUpdates(coursePayload, r)
 		if err != nil {
 			validationFields := cor.ValidationFields{}
 			b, _ := json.Marshal(err)
@@ -321,17 +318,6 @@ func UpdateCourseStatusEndpoint(cos cor.CourseService) http.HandlerFunc {
 		fmt.Printf("courseID:: %v \n", uint(courseID))
 		// Get the course
 		checkCourse := cos.GetCourse(uint(courseID))
-
-		if checkCourse.UserID != userID {
-			tParam = tr.TParam{
-				Key:          "error.course_not_found",
-				TemplateData: nil,
-				PluralCount:  nil,
-			}
-			resp := ut.Message(false, ut.Translate(tParam, r))
-			ut.ErrorRespond(http.StatusBadRequest, w, r, resp)
-			return
-		}
 
 		// Assign new values
 		checkCourse.Status = coursePayload.Status

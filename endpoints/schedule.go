@@ -67,6 +67,26 @@ func GetCourseSchedulesEndpoint(shs shd.ScheduleService) http.HandlerFunc {
 
 }
 
+// GetTutorCourseSchedulesEndpoint all schedules of a tutor user
+func GetTutorCourseSchedulesEndpoint(shs shd.ScheduleService) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		// Get User Token Data
+		tokenData := r.Context().Value("tokenData").(*md.UserTokenData)
+		userID := string(tokenData.UserID)
+
+		courseID, _ := strconv.ParseUint(chi.URLParam(r, "courseID"), 10, 64)
+
+		schedules := shs.GetSchedulesByCourseOwner(userID, uint(courseID))
+
+		resp := ut.Message(true, "")
+		resp["schedules"] = schedules
+		ut.Respond(w, r, resp)
+	}
+
+}
+
 // CreateScheduleEndpoint ...
 func CreateScheduleEndpoint(shs shd.ScheduleService, uss usr.UserService) http.HandlerFunc {
 

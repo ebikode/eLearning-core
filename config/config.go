@@ -53,8 +53,8 @@ type Config struct {
 // New NewConfig is used to generate a configuration instance which will be passed around the codebase
 func New() (*Config, error) {
 	config := Config{}
-	constants, err := viperConfigInit() // for local dev
-	// constants, err := viperStagingEnvInit() // for staging
+	// constants, err := viperConfigInit() // for local dev
+	constants, err := viperStagingEnvInit() // for staging
 	// constants, err := viperEnvInit() // for live production server
 	config.Constants = constants
 	if err != nil {

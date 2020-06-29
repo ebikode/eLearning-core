@@ -13,6 +13,7 @@ import (
 type ScheduleService interface {
 	GetSchedule(uint) *md.Schedule
 	GetSchedulesByCourse(uint) []*md.Schedule
+	GetSchedulesByCourseOwner(string, uint) []*md.Schedule
 	GetSchedules(int, int) []*md.Schedule
 	CreateSchedule(md.Schedule) (*md.Schedule, tr.TParam, error)
 	UpdateSchedule(*md.Schedule) (*md.Schedule, tr.TParam, error)
@@ -43,6 +44,10 @@ func (s *service) GetSchedules(page, limit int) []*md.Schedule {
 
 func (s *service) GetSchedulesByCourse(courseID uint) []*md.Schedule {
 	return s.sRepo.GetByCourse(courseID)
+}
+
+func (s *service) GetSchedulesByCourseOwner(userID string, courseID uint) []*md.Schedule {
+	return s.sRepo.GetByCourseOwner(userID, courseID)
 }
 
 // CreateSchedule Creates New schedule

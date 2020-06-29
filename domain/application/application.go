@@ -22,6 +22,7 @@ type ApplicationRepository interface {
 	Get(uint) *md.Application
 	GetByUser(string) []*md.Application
 	GetByCourse(int) []*md.Application
+	GetByCourseOwner(string) []*md.Application
 	// Get returns all applications.
 	GetAll(int, int) []*md.Application
 	// Store a given application to the repository.

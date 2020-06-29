@@ -14,6 +14,7 @@ type QuestionService interface {
 	GetQuestion(string) *md.Question
 	CountQuestionsByCourse(uint) int
 	GetQuestionsByCourse(uint) []*md.PubQuestion
+	GetQuestionsByCourseOwner(string, uint) []*md.Question
 	GetQuestions(int, int) []*md.Question
 	CreateQuestion(md.Question) (*md.Question, tr.TParam, error)
 	UpdateQuestion(*md.Question) (*md.Question, tr.TParam, error)
@@ -44,6 +45,10 @@ func (s *service) GetQuestions(page, limit int) []*md.Question {
 
 func (s *service) CountQuestionsByCourse(courseID uint) int {
 	return s.qRepo.CountByCourse(courseID)
+}
+
+func (s *service) GetQuestionsByCourseOwner(userID string, courseID uint) []*md.Question {
+	return s.qRepo.GetByCourseOwner(userID, courseID)
 }
 
 func (s *service) GetQuestionsByCourse(courseID uint) []*md.PubQuestion {

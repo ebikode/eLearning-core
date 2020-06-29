@@ -136,7 +136,7 @@ func InitRoutes(cfg config.Constants, mdb *storage.MDatabase) *chi.Mux {
 
 			// Schedules Endpoint
 			r.Route("/schedules", func(r chi.Router) {
-				r.Get("/{courseID}", endP.GetCourseSchedulesEndpoint(shdService))
+				r.Get("/course/{courseID}", endP.GetCourseSchedulesEndpoint(shdService))
 			})
 
 			// Article Endpoint
@@ -165,6 +165,7 @@ func InitRoutes(cfg config.Constants, mdb *storage.MDatabase) *chi.Mux {
 
 				// Applications Endpoints
 				r.Route("/applications", func(r chi.Router) {
+					r.Get("/", endP.GetCourseOwnerApplicationsEndpoint(appService, ut.TutorRole))
 					r.Get("/course/{courseID}", endP.GetCourseApplicationsEndpoint(appService))
 				})
 
@@ -184,7 +185,7 @@ func InitRoutes(cfg config.Constants, mdb *storage.MDatabase) *chi.Mux {
 
 				// Questions Endpoints
 				r.Route("/questions", func(r chi.Router) {
-					r.Get("/course/{courseID}", endP.GetCourseQuestionsEndpoint(queService))
+					r.Get("/course/{courseID}", endP.GetTutorCourseQuestionsEndpoint(queService))
 					r.Post("/", endP.CreateQuestionEndpoint(queService, usService))
 					r.Put("/{questionID}", endP.UpdateQuestionEndpoint(queService))
 				})
@@ -199,6 +200,7 @@ func InitRoutes(cfg config.Constants, mdb *storage.MDatabase) *chi.Mux {
 				// Schedules Endpoint
 				r.Route("/schedules", func(r chi.Router) {
 					r.Get("/", endP.GetAdminSchedulesEndpoint(shdService))
+					r.Get("/course/{courseID}", endP.GetTutorCourseSchedulesEndpoint(shdService))
 					r.Post("/", endP.CreateScheduleEndpoint(shdService, usService))
 					r.Put("/{scheduleID}", endP.UpdateScheduleEndpoint(shdService))
 				})
@@ -298,6 +300,11 @@ func InitRoutes(cfg config.Constants, mdb *storage.MDatabase) *chi.Mux {
 				r.Use(
 					mw.IsManagerAdmin(), //Sales Admin middleware
 				)
+
+				// Courses Endpoints
+				r.Route("/courses", func(r chi.Router) {
+					r.Put("/status/{courseID}", endP.UpdateCourseStatusEndpoint(couService))
+				})
 
 				// Applications Endpoints
 				r.Route("/applications", func(r chi.Router) {

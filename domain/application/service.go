@@ -14,6 +14,7 @@ type ApplicationService interface {
 	GetApplication(uint) *md.Application
 	GetUserApplications(string) []*md.Application
 	GetApplicationsByCourse(int) []*md.Application
+	GetApplicationsByCourseOwner(string) []*md.Application
 	GetApplications(int, int) []*md.Application
 	CreateApplication(md.Application) (*md.Application, tr.TParam, error)
 	UpdateApplication(*md.Application) (*md.Application, tr.TParam, error)
@@ -48,6 +49,10 @@ func (s *service) GetUserApplications(userID string) []*md.Application {
 
 func (s *service) GetApplicationsByCourse(courseID int) []*md.Application {
 	return s.aRepo.GetByCourse(courseID)
+}
+
+func (s *service) GetApplicationsByCourseOwner(userID string) []*md.Application {
+	return s.aRepo.GetByCourseOwner(userID)
 }
 
 // CreateApplication Creates New application

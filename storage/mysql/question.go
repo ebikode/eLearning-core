@@ -3,6 +3,7 @@ package storage
 import (
 	"github.com/biezhi/gorm-paginator/pagination"
 	md "github.com/ebikode/eLearning-core/model"
+	ut "github.com/ebikode/eLearning-core/utils"
 )
 
 // DBQuestionStorage encapsulates DB Connection Model
@@ -76,6 +77,17 @@ func (adb *DBQuestionStorage) GetAll(page, limit int) []*md.Question {
 // GetByCourse Fetch all course' questions from DB
 func (adb *DBQuestionStorage) GetByCourse(courseID uint) []*md.PubQuestion {
 	var questions []*md.PubQuestion
+
+	adb.db.
+		Preload("Course").
+		Where("course_id=? AND status=?", courseID, ut.Active).
+		Find(&questions)
+	return questions
+}
+
+// GetByCourseOwner Fetch all course' questions from DB
+func (adb *DBQuestionStorage) GetByCourseOwner(userID string, courseID uint) []*md.Question {
+	var questions []*md.Question
 
 	adb.db.
 		Preload("Course").

@@ -14,6 +14,7 @@ type Application struct {
 	CertificateIssuedTimestamp int64    `json:"certificate_issued_timestamp" gorm:"type:int(20)"`
 	Status                     string   `json:"status" gorm:"type:enum('pending','active','suspended','completed');default:'active'"`
 	CertificateIssuer          *Admin   `json:"issuer"`
+	Grade                      *Grade   `json:"grade" gorm:"foreignKey:ApplicationID"`
 	Course                     *Course  `json:"course"`
 	User                       *PubUser `json:"user"`
 }
