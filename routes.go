@@ -121,7 +121,7 @@ func InitRoutes(cfg config.Constants, mdb *storage.MDatabase) *chi.Mux {
 			// Applications Endpoints
 			r.Route("/applications", func(r chi.Router) {
 				r.Get("/", endP.GetUserApplicationsEndpoint(appService, ut.UserRole))
-				r.Post("/{applicationID}", endP.CreateApplicationEndpoint(appService, usService, couService))
+				r.Post("/", endP.CreateApplicationEndpoint(appService, usService, couService))
 			})
 
 			// Questions Endpoints
